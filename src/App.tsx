@@ -9,19 +9,25 @@ import {
   PlusOutlined,
   SettingOutlined
 } from "@ant-design/icons";
-import { Layout, Menu, Button, Empty } from "antd";
-import React, { useState, lazy, Suspense } from "react";
-import { useSelector } from "react-redux";
+import { Layout, Menu, Button, Empty, Switch } from "antd";
+import React, { useState, lazy, Suspense, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setaiActive } from "./reducers/globalSlice";
 import CreateModal from "./settings/createModal";
 import SettingModal from "./settings/settingModal";
 const EditorApp = lazy(() => import("./EditorApp"));
 const { Header, Sider, Content } = Layout;
+const DEV = import.meta.env.MODE === "development";
 
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
-  const { editId } = useSelector((state: any) => state.global)
+  const { editId, aiActive } = useSelector((state: any) => state.global)
+  const dispatch = useDispatch()
+  useEffect(() => {
+    dispatch(setaiActive(false))
+  }, [DEV])
   // Toggle the visibility of the Modal by updating the settingVisible state
   const showModal = () => {
     setSettingVisible(true);
@@ -74,8 +80,20 @@ const App: React.FC = () => {
       <Button type="primary" size="large" onClick={showCreateModal}>创建教案！</Button>
     </Empty>
   )
+  const devTools = (
+    <div style={{ position: 'fixed', right: 20, top: 20, display: 'flex', alignItems: 'center' }}>
+      openAI请求&nbsp;&nbsp;
+      <Switch checkedChildren="开启" unCheckedChildren="关闭" checked={aiActive} onClick={(checked) => {
+        dispatch(setaiActive(checked))
+      }} />
+    </div>
+  )
   return (
     <Layout style={{ height: "100%" }}>
+      {
+        DEV ? devTools
+          : null
+      }
       <Sider trigger={null} collapsible collapsed={collapsed}>
         <div className="logo" >
         </div>

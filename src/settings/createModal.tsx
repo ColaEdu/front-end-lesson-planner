@@ -5,8 +5,8 @@ import { createSchemaField } from '@formily/react'
 import { Form, FormItem, Input, Select, Cascader } from '@formily/antd-v5';
 import { schema as settingSchema } from './settingModal';
 import { createLessonPrompt, CreatePrompt, systemPrompt } from "../utils/promptBuilder";
-import { useDispatch } from "react-redux";
-import globalSlice, { callOpenAI, fetchAI } from "../reducers/globalSlice";
+import { useDispatch, useSelector } from "react-redux";
+import globalSlice, { callOpenAI } from "../reducers/globalSlice";
 import { getSummaryLessonText } from "../server/openai";
 
 export const schema = {
@@ -85,6 +85,7 @@ const CreateModal: React.FC<any> = (props: any) => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const { settext, seteditId } = globalSlice.actions;
+  const { aiActive } = useSelector(state => state.global);
   const handleOk = async () => {
     const values: any = await form.submit();
     localStorage.setItem('__cola_edu_settings', JSON.stringify({
@@ -103,14 +104,18 @@ const CreateModal: React.FC<any> = (props: any) => {
     setLoading(true);
     const response = await postRequest(postData);
     setLoading(false);
-    const {text, recordId} = response;
+    const { text, recordId } = response;
     // 示例：添加表单数据到 globalData
     dispatch(seteditId(recordId));
-    dispatch(callOpenAI({
-      textBookName: postData.textBookName,
-      title: postData.teachingTheme,
-      content: text
-    }))
+    if (aiActive) {
+      dispatch(callOpenAI({
+        textBookName: postData.textBookName,
+        title: postData.teachingTheme,
+        content: text
+      }))
+    } else {
+      dispatch(settext(`# 当前开发环境不支持调用ai`))
+    }
     props.onCancel()
   }
   useEffect(() => {
