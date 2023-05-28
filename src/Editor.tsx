@@ -71,6 +71,7 @@ import YouTubePlugin from './plugins/YouTubePlugin';
 import PlaygroundEditorTheme from './themes/PlaygroundEditorTheme';
 import ContentEditable from './ui/ContentEditable';
 import Placeholder from './ui/Placeholder';
+import AskAIPlugin from './plugins/AskAIPlugin';
 const skipCollaborationInit =
   // @ts-ignore
   window.parent != null && window.parent.frames.right === window;
@@ -135,7 +136,6 @@ export default function Editor(): JSX.Element {
     };
   }, [isSmallWidthViewport]);
   const globalData = useSelector(state => state.global);
-  console.log('text--', globalData.text)
   return (
     <>
       {isRichText && <ToolbarPlugin />}
@@ -144,6 +144,7 @@ export default function Editor(): JSX.Element {
           !isRichText ? 'plain-text' : ''
         }`}>
         {isMaxLength && <MaxLengthPlugin maxLength={30} />}
+        <AskAIPlugin anchorElem={floatingAnchorElem}/>
         <DragDropPaste />
         <AutoFocusPlugin />
         <ClearEditorPlugin />
@@ -156,9 +157,9 @@ export default function Editor(): JSX.Element {
         <KeywordsPlugin />
         <SpeechToTextPlugin />
         <AutoLinkPlugin />
-        {/* <CommentPlugin
+        <CommentPlugin
           providerFactory={isCollab ? createWebsocketProvider : undefined}
-        /> */}
+        />
         {isRichText ? (
           <>
             {isCollab ? (

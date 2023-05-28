@@ -1,5 +1,8 @@
+import { HOST_PREFIX } from "../App";
+
+const HOST_PRIFIX = ``
 export const getSummaryLessonText = async(params: any) => {
-  const res = await fetch(`http://43.134.126.166:3001/similarText?teachingTheme=${params.teachingTheme}&textBookName=${params.textBookName}`, {
+  const res = await fetch(`//${HOST_PREFIX}/similarText?teachingTheme=${params.teachingTheme}&textBookName=${params.textBookName}`, {
     method: 'get',
   });
   if (res.ok) {

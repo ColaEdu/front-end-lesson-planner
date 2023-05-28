@@ -6,6 +6,8 @@
  *
  */
 
+import { DEV } from "./App";
+
 export type SettingName =
   | 'disableBeforeInput'
   | 'measureTypingPerf'
@@ -41,7 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   measureTypingPerf: false,
   showNestedEditorTreeView: false,
   showTableOfContents: false,
-  showTreeView: false,
+  showTreeView: DEV ? true : false,
   tableCellBackgroundColor: true,
   tableCellMerge: true,
 };

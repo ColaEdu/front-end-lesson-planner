@@ -29,6 +29,9 @@ import {getDOMRangeRect} from '../../utils/getDOMRangeRect';
 import {getSelectedNode} from '../../utils/getSelectedNode';
 import {setFloatingElemPosition} from '../../utils/setFloatingElemPosition';
 import {INSERT_INLINE_COMMAND} from '../CommentPlugin';
+import { ASK_AI_COMMAND } from '../AskAIPlugin';
+import { useDispatch, useSelector } from 'react-redux';
+import { setaskAI } from '../../reducers/globalSlice';
 
 function TextFormatFloatingToolbar({
   editor,
@@ -54,7 +57,7 @@ function TextFormatFloatingToolbar({
   isUnderline: boolean;
 }): JSX.Element {
   const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
-
+  const dispatch = useDispatch();
   const insertLink = useCallback(() => {
     if (!isLink) {
       editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://');
@@ -97,10 +100,10 @@ function TextFormatFloatingToolbar({
       document.addEventListener('mousemove', mouseMoveListener);
       document.addEventListener('mouseup', mouseUpListener);
 
-      return () => {
-        document.removeEventListener('mousemove', mouseMoveListener);
-        document.removeEventListener('mouseup', mouseUpListener);
-      };
+        return () => {
+          document.removeEventListener('mousemove', mouseMoveListener);
+          document.removeEventListener('mouseup', mouseUpListener);
+        };
     }
   }, [popupCharStylesEditorRef]);
 
@@ -176,6 +179,16 @@ function TextFormatFloatingToolbar({
     <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
       {editor.isEditable() && (
         <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              editor.dispatchCommand(ASK_AI_COMMAND, 'bold');
+              dispatch(setaskAI(true));
+            }}
+            className={'popup-item spaced ' + (isBold ? 'active' : '')}
+            aria-label="Format text as bold">
+            AI
+          </button>
           <button
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
@@ -265,7 +278,8 @@ function useFloatingTextFormatToolbar(
   const [isSubscript, setIsSubscript] = useState(false);
   const [isSuperscript, setIsSuperscript] = useState(false);
   const [isCode, setIsCode] = useState(false);
-
+  const { showAskAI } = useSelector((state: any) => state.global)
+// 根据选择的区域，判断是否展示弹窗
   const updatePopup = useCallback(() => {
     editor.getEditorState().read(() => {
       // Should not to pop up the floating toolbar when using IME input
@@ -346,7 +360,7 @@ function useFloatingTextFormatToolbar(
     );
   }, [editor, updatePopup]);
 
-  if (!isText || isLink) {
+  if (!isText || isLink || showAskAI) {
     return null;
   }
 

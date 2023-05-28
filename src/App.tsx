@@ -17,8 +17,8 @@ import CreateModal from "./settings/createModal";
 import SettingModal from "./settings/settingModal";
 const EditorApp = lazy(() => import("./EditorApp"));
 const { Header, Sider, Content } = Layout;
-const DEV = import.meta.env.MODE === "development";
-
+export const DEV = import.meta.env.MODE === "development";
+export const HOST_PREFIX = DEV ? '43.134.126.166:3001' : 'api.cola.app'
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -26,7 +26,9 @@ const App: React.FC = () => {
   const { editId, aiActive } = useSelector((state: any) => state.global)
   const dispatch = useDispatch()
   useEffect(() => {
-    dispatch(setaiActive(false))
+    if (DEV) {
+      dispatch(setaiActive(false))
+    }
   }, [DEV])
   // Toggle the visibility of the Modal by updating the settingVisible state
   const showModal = () => {
@@ -146,7 +148,7 @@ const App: React.FC = () => {
           }}
         >
           <Suspense fallback={<div>Loading...</div>}>
-            {editId ? <EditorApp /> : emptyView}
+            {!editId ? <EditorApp /> : emptyView}
           </Suspense>
           {/* <FormComponent /> */}
         </Content>
