@@ -8,30 +8,32 @@
 
 import './index.css';
 
-import {$isCodeHighlightNode} from '@lexical/code';
-import {$isLinkNode, TOGGLE_LINK_COMMAND} from '@lexical/link';
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {mergeRegister} from '@lexical/utils';
+import { $isCodeHighlightNode } from '@lexical/code';
+import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { mergeRegister } from '@lexical/utils';
 import {
   $getSelection,
   $isRangeSelection,
   $isTextNode,
+  CAN_UNDO_COMMAND,
   COMMAND_PRIORITY_LOW,
   FORMAT_TEXT_COMMAND,
   LexicalEditor,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as React from 'react';
-import {createPortal} from 'react-dom';
+import { createPortal } from 'react-dom';
 
-import {getDOMRangeRect} from '../../utils/getDOMRangeRect';
-import {getSelectedNode} from '../../utils/getSelectedNode';
-import {setFloatingElemPosition} from '../../utils/setFloatingElemPosition';
-import {INSERT_INLINE_COMMAND} from '../CommentPlugin';
+import { getDOMRangeRect } from '../../utils/getDOMRangeRect';
+import { getSelectedNode } from '../../utils/getSelectedNode';
+import { setFloatingElemPosition } from '../../utils/setFloatingElemPosition';
+import { INSERT_INLINE_COMMAND } from '../CommentPlugin';
 import { ASK_AI_COMMAND } from '../AskAIPlugin';
 import { useDispatch, useSelector } from 'react-redux';
-import { setaskAI } from '../../reducers/globalSlice';
+import { setaskAI, setaskAISelection } from '../../reducers/globalSlice';
+import { $patchStyleText } from '@lexical/selection';
 
 function TextFormatFloatingToolbar({
   editor,
@@ -100,10 +102,10 @@ function TextFormatFloatingToolbar({
       document.addEventListener('mousemove', mouseMoveListener);
       document.addEventListener('mouseup', mouseUpListener);
 
-        return () => {
-          document.removeEventListener('mousemove', mouseMoveListener);
-          document.removeEventListener('mouseup', mouseUpListener);
-        };
+      return () => {
+        document.removeEventListener('mousemove', mouseMoveListener);
+        document.removeEventListener('mouseup', mouseUpListener);
+      };
     }
   }, [popupCharStylesEditorRef]);
 
@@ -158,7 +160,7 @@ function TextFormatFloatingToolbar({
       updateTextFormatFloatingToolbar();
     });
     return mergeRegister(
-      editor.registerUpdateListener(({editorState}) => {
+      editor.registerUpdateListener(({ editorState }) => {
         editorState.read(() => {
           updateTextFormatFloatingToolbar();
         });
@@ -181,9 +183,31 @@ function TextFormatFloatingToolbar({
         <>
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              editor.dispatchCommand(ASK_AI_COMMAND, 'bold');
+              e.stopPropagation();
+              /**
+            * FloatingTextFormatToolbarPlugin组件中点击ask ai，会弹出
+            * 此组件，这时需要保留之前的选中状态
+            * 因为编辑器选中时，为获取焦点状态，不能同时和输入框获取焦点！
+            * 故给选中的文本一段样式！
+            */
+              editor.update(() => {
+                const prevSelection = $getSelection();
+                console.log('prevSelection--', prevSelection)
+                const selectionShot = prevSelection?.clone();
+                $patchStyleText(selectionShot, { background: '#95b9dd99' });
+                dispatch(setaskAISelection(selectionShot));
+                // editor.dispatchCommand(ASK_AI_COMMAND, {
+                //   selectionShot
+                // });
+                // 添加定时器，保证先执行以上文本填色逻辑，再展示ai弹窗
+                setTimeout(() => {
+              editor.dispatchCommand(CAN_UNDO_COMMAND, false);
               dispatch(setaskAI(true));
+                }, 0)
+              })
+              // editor.getEditorState().(() => {
+
+              // })
             }}
             className={'popup-item spaced ' + (isBold ? 'active' : '')}
             aria-label="Format text as bold">
@@ -279,7 +303,7 @@ function useFloatingTextFormatToolbar(
   const [isSuperscript, setIsSuperscript] = useState(false);
   const [isCode, setIsCode] = useState(false);
   const { showAskAI } = useSelector((state: any) => state.global)
-// 根据选择的区域，判断是否展示弹窗
+  // 根据选择的区域，判断是否展示弹窗
   const updatePopup = useCallback(() => {
     editor.getEditorState().read(() => {
       // Should not to pop up the floating toolbar when using IME input

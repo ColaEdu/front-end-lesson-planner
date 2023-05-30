@@ -144,7 +144,8 @@ export default function Editor(): JSX.Element {
           !isRichText ? 'plain-text' : ''
         }`}>
         {isMaxLength && <MaxLengthPlugin maxLength={30} />}
-        <AskAIPlugin anchorElem={floatingAnchorElem}/>
+        {globalData.showAskAI && <AskAIPlugin anchorElem={floatingAnchorElem}/>}
+        {/* <AskAIPlugin anchorElem={floatingAnchorElem}/> */}
         <DragDropPaste />
         <AutoFocusPlugin />
         <ClearEditorPlugin />
