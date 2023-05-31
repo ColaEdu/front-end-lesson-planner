@@ -187,14 +187,10 @@ function TextFormatFloatingToolbar({
             * 展示ask ai
             */
               dispatch(setaskAI(true));
-             
-              // editor.getEditorState().(() => {
-
-              // })
             }}
-            className={'popup-item spaced ' + (isBold ? 'active' : '')}
+            className={'popup-item spaced '}
             aria-label="Format text as ai">
-             <i className="format ai" />
+            <i className="format ai" />
           </button>
           <button
             onClick={() => {
