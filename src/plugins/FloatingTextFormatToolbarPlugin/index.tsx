@@ -183,35 +183,18 @@ function TextFormatFloatingToolbar({
         <>
           <button
             onClick={(e) => {
-              e.stopPropagation();
               /**
-            * FloatingTextFormatToolbarPlugin组件中点击ask ai，会弹出
-            * 此组件，这时需要保留之前的选中状态
-            * 因为编辑器选中时，为获取焦点状态，不能同时和输入框获取焦点！
-            * 故给选中的文本一段样式！
+            * 展示ask ai
             */
-              editor.update(() => {
-                const prevSelection = $getSelection();
-                console.log('prevSelection--', prevSelection)
-                const selectionShot = prevSelection?.clone();
-                $patchStyleText(selectionShot, { background: '#95b9dd99' });
-                dispatch(setaskAISelection(selectionShot));
-                // editor.dispatchCommand(ASK_AI_COMMAND, {
-                //   selectionShot
-                // });
-                // 添加定时器，保证先执行以上文本填色逻辑，再展示ai弹窗
-                setTimeout(() => {
-              editor.dispatchCommand(CAN_UNDO_COMMAND, false);
               dispatch(setaskAI(true));
-                }, 0)
-              })
+             
               // editor.getEditorState().(() => {
 
               // })
             }}
             className={'popup-item spaced ' + (isBold ? 'active' : '')}
-            aria-label="Format text as bold">
-            AI
+            aria-label="Format text as ai">
+             <i className="format ai" />
           </button>
           <button
             onClick={() => {
@@ -279,12 +262,12 @@ function TextFormatFloatingToolbar({
           </button>
         </>
       )}
-      <button
+      {/* <button
         onClick={insertComment}
         className={'popup-item spaced insert-comment'}
         aria-label="Insert comment">
         <i className="format add-comment" />
-      </button>
+      </button> */}
     </div>
   );
 }
@@ -303,6 +286,14 @@ function useFloatingTextFormatToolbar(
   const [isSuperscript, setIsSuperscript] = useState(false);
   const [isCode, setIsCode] = useState(false);
   const { showAskAI } = useSelector((state: any) => state.global)
+  useEffect(() => {
+    // 如果不展示ask ai, 清空样式
+    if (!showAskAI) {
+      console.log('不展示ask ai')
+    } else {
+      console.log('展示ask ai')
+    }
+  }, [showAskAI])
   // 根据选择的区域，判断是否展示弹窗
   const updatePopup = useCallback(() => {
     editor.getEditorState().read(() => {

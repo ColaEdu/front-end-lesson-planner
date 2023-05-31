@@ -403,6 +403,11 @@ i.bucket {
   background-image: url(images/icons/paint-bucket.svg);
 }
 
+i.ai {
+  background-image: url(images/icons/type-ai.svg);
+  margin-top: 5px !important;
+}
+
 i.bold {
   background-image: url(images/icons/type-bold.svg);
 }

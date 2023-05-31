@@ -880,6 +880,7 @@ export default function CommentPlugin({
           }
         });
       }),
+      // 点击编辑器其他部分时，弹窗消失
       editor.registerUpdateListener(({editorState, tags}) => {
         editorState.read(() => {
           const selection = $getSelection();
