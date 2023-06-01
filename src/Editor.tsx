@@ -176,9 +176,6 @@ export default function Editor(): JSX.Element {
               contentEditable={
                 <div className="editor-scroller">
                   <div className="editor" id="editor" style={{
-                    maxHeight: 500,
-                    overflow: 'auto',
-                    paddingBottom: 20
                   }} ref={onRef}>
                     <ContentEditable />
                   </div>

@@ -10,6 +10,7 @@ import './index.css';
 
 import { $isCodeHighlightNode } from '@lexical/code';
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { $convertToMarkdownString } from '@lexical/markdown'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { mergeRegister } from '@lexical/utils';
 import {
@@ -186,7 +187,16 @@ function TextFormatFloatingToolbar({
               /**
             * 展示ask ai
             */
-              dispatch(setaskAI(true));
+              editor.getEditorState().read(() => {
+                const selection = $getSelection();
+                // 无法转换选中区域为Markdown
+                const selectionContent = selection?.getTextContent();
+                // const nodes = selection?.getNodes();
+                // const selectionContent = $convertToMarkdownString();
+                // console.log('selectionContent--', selectionContent)
+                dispatch(setaskAISelection(selectionContent))
+                dispatch(setaskAI(true));
+              })
             }}
             className={'popup-item spaced '}
             aria-label="Format text as ai">
@@ -282,14 +292,6 @@ function useFloatingTextFormatToolbar(
   const [isSuperscript, setIsSuperscript] = useState(false);
   const [isCode, setIsCode] = useState(false);
   const { showAskAI } = useSelector((state: any) => state.global)
-  useEffect(() => {
-    // 如果不展示ask ai, 清空样式
-    if (!showAskAI) {
-      console.log('不展示ask ai')
-    } else {
-      console.log('展示ask ai')
-    }
-  }, [showAskAI])
   // 根据选择的区域，判断是否展示弹窗
   const updatePopup = useCallback(() => {
     editor.getEditorState().read(() => {
