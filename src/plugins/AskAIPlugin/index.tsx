@@ -2,12 +2,14 @@ import {
   $getSelection,
   $isRangeSelection,
   createCommand,
+  EditorState,
   LexicalCommand,
+  LexicalEditor,
   RangeSelection,
 } from 'lexical';
-import { ThunderboltFilled, BulbFilled } from '@ant-design/icons';
+import { ThunderboltFilled, BulbFilled, SendOutlined, BulbOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Input, Modal, Drawer } from 'antd';
+import { Input, Modal, Drawer, Button, Tooltip, Spin } from 'antd';
 import ReactDOM, { createPortal } from 'react-dom';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { mergeRegister, registerNestedElementResolver } from '@lexical/utils';
@@ -18,20 +20,42 @@ import { $patchStyleText, $setBlocksType, createDOMRange, createRectsFromDOMRang
 import { PLAYGROUND_TRANSFORMERS } from '../MarkdownTransformers';
 import useAIGenarate from './useAIGenarate';
 import AIGenPart from './AIGenPart';
+import PlainTextEditor from './PlainTextEditor';
+import { $isRootTextContentEmpty, $rootTextContent } from '@lexical/text';
 
 
 export const ASK_AI_COMMAND: LexicalCommand<any> =
   createCommand('ASK_AI_COMMAND');
 
+// ask_ai输入框onChange事件
+function useOnChange(
+  setContent: (text: string) => void,
+  setCanSubmit: (canSubmit: boolean) => void,
+) {
+  return useCallback(
+    (editorState: EditorState, _editor: LexicalEditor) => {
+      editorState.read(() => {
+        setContent($rootTextContent());
+        setCanSubmit(!$isRootTextContentEmpty(_editor.isComposing(), true));
+      });
+    },
+    [setContent],
+  );
+}
+
 const AskAIPlugin = ({
   anchorElem,
 }) => {
   const [editor] = useLexicalComposerContext();
-  const { applyAIText, openDrawer, setOpenDrawer, askAIText, setAskAIText } = useAIGenarate(editor);
   const { showAskAI, askAISelection } = useSelector((state: any) => state.global)
+  const { applyAIText, openDrawer, setOpenDrawer, askAIText, setAskAIText, askAIToGenarate, aiAdvise, aiAdviseLoading,setAIAdviseLoading } = useAIGenarate(editor);
+  const [canSubmit, setCanSubmit] = useState(false);
   const [showAskMenu, setShowAskMenu] = useState(true);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
+  // PlainText编辑器的ref
+  const editorRef = useRef<LexicalEditor>(null);
+
   /**
    * selection的形式会触发焦点变化，故展示ask ai时采取的是标亮之前选中块的逻辑
    * 以下为标亮逻辑
@@ -43,6 +67,7 @@ const AskAIPlugin = ({
     }),
     [],
   );
+
   const selectionRef = useRef<RangeSelection | null>(null);
   const updateLocation = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -94,10 +119,19 @@ const AskAIPlugin = ({
           }
         }
       }
+      // if (!openDrawer) {
+      //   setTimeout(() => {
+      //     setShowAskMenu(true);
+      //   }, 1000)
+      // }
     });
   }, [editor, selectionState]);
 
   useLayoutEffect(() => {
+    /**
+     * * bug： selection部分后出现，导致元素堆叠在输入框上方
+    * 改进1: 先选中selection,后展示输入框与菜单
+     */
     updateLocation();
     const container = selectionState.container;
     // 标亮区块会生成在#root 之外
@@ -109,7 +143,7 @@ const AskAIPlugin = ({
         body.removeChild(container);
       };
     }
-  }, [selectionState.container, updateLocation]);
+  }, [selectionState.container, updateLocation, openDrawer]);
 
   useEffect(() => {
     window.addEventListener('resize', updateLocation);
@@ -132,46 +166,56 @@ const AskAIPlugin = ({
     );
   }, [editor]);
 
+  const onEscape = (event: KeyboardEvent): boolean => {
+    event.preventDefault();
+    // cancelAddComment();
+    return true;
+  };
+  const onChange = useOnChange(setAskAIText, setCanSubmit);
+  const renderAIPopUp = (<>
+
+    <div className="AskAIPlugin_AskAIInputBox" ref={popupRef}>
+      <Spin spinning={aiAdviseLoading}>
+        <PlainTextEditor
+          className="AskAIPlugin_AskAIInputBox_Editor"
+          onEscape={onEscape}
+          onChange={onChange}
+          aiAdvise={aiAdvise}
+          editorRef={editorRef}
+        />
+        <div className='inputbox_container'>
+          <Button disabled={!canSubmit} size='small' type='primary' icon={<SendOutlined />}
+            onClick={() => {
+              setShowAskMenu(false);
+              setOpenDrawer(true);
+            }}
+          >
+            优化文本
+          </Button>
+          <Tooltip title="AI生成建议">
+            <BulbOutlined onClick={async () => {
+              await askAIToGenarate();
+            }} className="ask_ai_advise" />
+          </Tooltip>
+        </div>
+      </Spin>
+
+    </div>
+  </>)
   return <>
     {showAskAI &&
       createPortal(
-        <div ref={popupRef} id="ask_ai"
-        // onClick={handleAIToolBarClick}
-        >
-          {
-            showAskMenu && <Input
-              autoFocus
-              placeholder='让AI撰写' className='float_ask_ai'
-              value={askAIText}
-              onChange={(e) => {
-                setAskAIText(e.target.value)
-              }}
-              prefix={
-                <BulbFilled className='ask_ai_genarate_question' />
-              }
-              addonAfter={
-                askAIText
-                  ? <ThunderboltFilled className='ask_ai_genarate' onClick={() => {
-                    setShowAskMenu(false);
-                    setOpenDrawer(true);
-                  }} />
-                  : null}
-            />
-          }
-          {
-            <AIGenPart
-              openDrawer={openDrawer}
-              onApplyText={applyAIText}
-              askAIText={askAIText}
-              askAISelection={askAISelection}
-              onCancel={() => {
-                setOpenDrawer(false);
-              }} />
-          }
-          {/* <div className='ask_ai_playground'> */}
-          {/* <AIGenPart /> */}
-          {/* </div> */}
-        </div>,
+        <>
+          {showAskMenu && renderAIPopUp}
+          <AIGenPart
+            openDrawer={openDrawer}
+            onApplyText={applyAIText}
+            askAIText={askAIText}
+            askAISelection={askAISelection}
+            onCancel={() => {
+              setOpenDrawer(false);
+            }} />
+        </>,
         anchorElem,
       )
     }

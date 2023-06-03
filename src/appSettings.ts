@@ -43,7 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   measureTypingPerf: false,
   showNestedEditorTreeView: false,
   showTableOfContents: false,
-  showTreeView: DEV ? true : false,
+  showTreeView: DEV ? false : false,
   tableCellBackgroundColor: true,
   tableCellMerge: true,
 };

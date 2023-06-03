@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setaiActive } from "./reducers/globalSlice";
 import CreateModal from "./settings/createModal";
 import SettingModal from "./settings/settingModal";
-const EditorApp = lazy(() => import("./EditorApp"));
+// const EditorApp = lazy(() => import("./EditorApp"));
 const { Header, Sider, Content } = Layout;
 export const DEV = import.meta.env.MODE === "development";
 export const HOST_PREFIX = DEV ? '43.134.126.166:3001' : 'api.cola.app'
@@ -25,6 +25,14 @@ const App: React.FC = () => {
   const [createVisible, setCreateVisible] = useState(false);
   const { editId, aiActive } = useSelector((state: any) => state.global)
   const dispatch = useDispatch()
+  const [EditorApp, setEditorApp] = useState<any>(null);
+
+  useEffect(() => {
+    window.requestIdleCallback(async () => {
+      const { default: LoadedEditorApp } = await import('./EditorApp');
+      setEditorApp(() => LoadedEditorApp);
+    });
+  }, []);
   useEffect(() => {
     if (DEV) {
       dispatch(setaiActive(false))
@@ -90,6 +98,7 @@ const App: React.FC = () => {
       }} />
     </div>
   )
+  const renderEditorApp = (EditorApp ? <EditorApp /> : <div>loading</div>)
   return (
     <Layout style={{ height: "100%" }}>
       {
@@ -147,9 +156,9 @@ const App: React.FC = () => {
             // minHeight: 280,
           }}
         >
-          <Suspense fallback={<div>Loading...</div>}>
-            {!editId ? <EditorApp /> : emptyView}
-          </Suspense>
+          {editId ? renderEditorApp : emptyView}
+          {/* <Suspense fallback={<div>Loading...</div>}>
+          </Suspense> */}
           {/* <FormComponent /> */}
         </Content>
       </Layout>
