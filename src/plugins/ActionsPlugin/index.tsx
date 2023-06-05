@@ -6,18 +6,18 @@
  *
  */
 
-import type {LexicalEditor} from 'lexical';
+import type { LexicalEditor } from 'lexical';
 
-import {$createCodeNode, $isCodeNode} from '@lexical/code';
-import {exportFile, importFile} from '@lexical/file';
+import { $createCodeNode, $isCodeNode } from '@lexical/code';
+import { exportFile, importFile } from '@lexical/file';
 import {
   $convertFromMarkdownString,
   $convertToMarkdownString,
 } from '@lexical/markdown';
-import {useCollaborationContext} from '@lexical/react/LexicalCollaborationContext';
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {mergeRegister} from '@lexical/utils';
-import {CONNECTED_COMMAND, TOGGLE_CONNECT_COMMAND} from '@lexical/yjs';
+import { useCollaborationContext } from '@lexical/react/LexicalCollaborationContext';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { mergeRegister } from '@lexical/utils';
+import { CONNECTED_COMMAND, TOGGLE_CONNECT_COMMAND } from '@lexical/yjs';
 import {
   $createTextNode,
   $getRoot,
@@ -26,16 +26,18 @@ import {
   COMMAND_PRIORITY_EDITOR,
 } from 'lexical';
 import * as React from 'react';
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import useModal from '../../hooks/useModal';
 import Button from '../../ui/Button';
-import {PLAYGROUND_TRANSFORMERS} from '../MarkdownTransformers';
+import { PLAYGROUND_TRANSFORMERS } from '../MarkdownTransformers';
 import {
   SPEECH_TO_TEXT_COMMAND,
   SUPPORT_SPEECH_RECOGNITION,
 } from '../SpeechToTextPlugin';
-import {printDocument} from '../../utils/printPDF'
+import { printDocument } from '../../utils/printPDF'
+import {$generateHtmlFromNodes} from '@lexical/html';
+
 
 async function sendEditorState(editor: LexicalEditor): Promise<void> {
   const stringifiedEditorState = JSON.stringify(editor.getEditorState());
@@ -86,7 +88,7 @@ export default function ActionsPlugin({
   const [connected, setConnected] = useState(false);
   const [isEditorEmpty, setIsEditorEmpty] = useState(true);
   const [modal, showModal] = useModal();
-  const {isCollabActive} = useCollaborationContext();
+  const { isCollabActive } = useCollaborationContext();
 
   useEffect(() => {
     return mergeRegister(
@@ -107,7 +109,7 @@ export default function ActionsPlugin({
 
   useEffect(() => {
     return editor.registerUpdateListener(
-      ({dirtyElements, prevEditorState, tags}) => {
+      ({ dirtyElements, prevEditorState, tags }) => {
         // If we are in read only mode, send the editor state
         // to server and ask for validation if possible.
         if (
@@ -186,13 +188,49 @@ export default function ActionsPlugin({
       </button> */}
       <button
         className="action-button export"
-        onClick={() =>
+        onClick={async() => {
+
+          function prettifyHTML(node: Element, level: number) {
+            const indentBefore = new Array(level++ + 1).join('  ');
+            const indentAfter = new Array(level - 1).join('  ');
+            let textNode;
+
+            for (let i = 0; i < node.children.length; i++) {
+              textNode = document.createTextNode('\n' + indentBefore);
+              node.insertBefore(textNode, node.children[i]);
+              prettifyHTML(node.children[i], level);
+              if (node.lastElementChild === node.children[i]) {
+                textNode = document.createTextNode('\n' + indentAfter);
+                node.appendChild(textNode);
+              }
+            }
+
+            return node;
+          }
+
+          function printPrettyHTML(str: string) {
+            const div = document.createElement('div');
+            div.innerHTML = str.trim();
+            return prettifyHTML(div, 0).innerHTML;
+          }
+          let htmlString = '';
+          editor.getEditorState().read(() => {
+            htmlString = printPrettyHTML($generateHtmlFromNodes(editor));
+          });
+          console.log('htmlString--', htmlString)
+          await printDocument(`<div>${htmlString}</div>`)
+          // return htmlString;
+          // editor.getEditorState().read(async () => {
+          //   const markdown = await $convertToMarkdownString(PLAYGROUND_TRANSFORMERS)
+          //   console.log('markdown--', markdown)
+          //   await printDocument('editor')
+          // })
+
           // exportFile(editor, {
           //   fileName: `Playground ${new Date().toISOString()}`,
           //   source: 'Playground',
           // })
-          printDocument('editor')
-        }
+        }}
         title="Export"
         aria-label="Export editor state to JSON">
         <i className="export" />
