@@ -156,7 +156,7 @@ const App: React.FC = () => {
             // minHeight: 280,
           }}
         >
-          {editId ? renderEditorApp : emptyView}
+          {!editId ? renderEditorApp : emptyView}
           {/* <Suspense fallback={<div>Loading...</div>}>
           </Suspense> */}
           {/* <FormComponent /> */}

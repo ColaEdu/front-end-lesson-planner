@@ -22,7 +22,7 @@ export const streamOpenAI = async (query: any, onChunkReturn) => {
     messages: [
       {
         role: 'user',
-        content: `请按以下要求生成一篇标准化结构的教案：课本:${query.textBookName},课文标题:${query.title},课文内容:${query.content}`
+        content: `请按以下要求生成一篇标准化结构的教案：课本:${query.textBookName},课文标题:${query.title},课文内容:${query.content},`
       }]
   });
 

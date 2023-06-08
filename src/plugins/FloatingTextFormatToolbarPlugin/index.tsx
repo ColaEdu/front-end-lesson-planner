@@ -35,6 +35,10 @@ import { ASK_AI_COMMAND } from '../AskAIPlugin';
 import { useDispatch, useSelector } from 'react-redux';
 import { setaskAI, setaskAISelection } from '../../reducers/globalSlice';
 import { $patchStyleText } from '@lexical/selection';
+import AIWritingPlugin from '../AIWritingPlugin';
+import AIWritingModal from '../AIWritingPlugin/AIWritingModal';
+import { Modal } from 'antd';
+import { AIIcon } from '../../images/icons/Icons';
 
 function TextFormatFloatingToolbar({
   editor,
@@ -47,6 +51,7 @@ function TextFormatFloatingToolbar({
   isStrikethrough,
   isSubscript,
   isSuperscript,
+  onAIWritingOpenChange,
 }: {
   editor: LexicalEditor;
   anchorElem: HTMLElement;
@@ -58,6 +63,7 @@ function TextFormatFloatingToolbar({
   isSubscript: boolean;
   isSuperscript: boolean;
   isUnderline: boolean;
+  onAIWritingOpenChange: (open: boolean) => void;
 }): JSX.Element {
   const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
@@ -109,7 +115,7 @@ function TextFormatFloatingToolbar({
       };
     }
   }, [popupCharStylesEditorRef]);
-
+  // 更新悬浮窗口的位置
   const updateTextFormatFloatingToolbar = useCallback(() => {
     const selection = $getSelection();
 
@@ -182,26 +188,10 @@ function TextFormatFloatingToolbar({
     <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
       {editor.isEditable() && (
         <>
-          <button
-            onClick={(e) => {
-              /**
-            * 展示ask ai
-            */
-              editor.getEditorState().read(() => {
-                const selection = $getSelection();
-                // 无法转换选中区域为Markdown
-                const selectionContent = selection?.getTextContent();
-                // const nodes = selection?.getNodes();
-                // const selectionContent = $convertToMarkdownString();
-                // console.log('selectionContent--', selectionContent)
-                dispatch(setaskAISelection(selectionContent))
-                dispatch(setaskAI(true));
-              })
-            }}
-            className={'popup-item spaced '}
-            aria-label="Format text as ai">
-            <i className="format ai" />
-          </button>
+          <AIWritingPlugin
+            // AI写作菜单展示时的回调，旨在解决监听selectionchange的问题
+            onOpenChange={onAIWritingOpenChange}
+          />
           <button
             onClick={() => {
               editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
@@ -282,6 +272,7 @@ function useFloatingTextFormatToolbar(
   editor: LexicalEditor,
   anchorElem: HTMLElement,
 ): JSX.Element | null {
+  // 定义状态记录选中的文本类型
   const [isText, setIsText] = useState(false);
   const [isLink, setIsLink] = useState(false);
   const [isBold, setIsBold] = useState(false);
@@ -291,8 +282,26 @@ function useFloatingTextFormatToolbar(
   const [isSubscript, setIsSubscript] = useState(false);
   const [isSuperscript, setIsSuperscript] = useState(false);
   const [isCode, setIsCode] = useState(false);
-  const { showAskAI } = useSelector((state: any) => state.global)
-  // 根据选择的区域，判断是否展示弹窗
+  const { showAskAI } = useSelector((state: any) => state.global);
+  const dispatch = useDispatch();
+  // 当点击编辑器其他选区/用户按键ESC/用户点击“取消按钮”时，二次询问用户是否取消ai弹窗
+  const handleConfirmCancelAI = () => {
+    if (showAskAI) {
+      Modal.confirm({
+        title: '是否忽略AI的建议回复？',
+        icon: <AIIcon />,
+        // content: 'Some descriptions',
+        onOk() {
+          console.log('OK');
+          dispatch(setaskAI(false));
+        },
+        onCancel() {
+          console.log('Cancel');
+        },
+      })
+    }
+  }
+  // 获取选区的文本类型
   const updatePopup = useCallback(() => {
     editor.getEditorState().read(() => {
       // Should not to pop up the floating toolbar when using IME input
@@ -310,6 +319,7 @@ function useFloatingTextFormatToolbar(
           !rootElement.contains(nativeSelection.anchorNode))
       ) {
         setIsText(false);
+        handleConfirmCancelAI();
         return;
       }
 
@@ -332,6 +342,7 @@ function useFloatingTextFormatToolbar(
       const parent = node.getParent();
       if ($isLinkNode(parent) || $isLinkNode(node)) {
         setIsLink(true);
+        // handleConfirmCancelAI();
       } else {
         setIsLink(false);
       }
@@ -343,22 +354,31 @@ function useFloatingTextFormatToolbar(
         setIsText($isTextNode(node));
       } else {
         setIsText(false);
+        // handleConfirmCancelAI();
       }
 
       const rawTextContent = selection.getTextContent().replace(/\n/g, '');
       if (!selection.isCollapsed() && rawTextContent === '') {
         setIsText(false);
+        // handleConfirmCancelAI();
         return;
       }
     });
-  }, [editor]);
-
+  }, [editor, showAskAI]);
+  // 监听，当dom中有选择状态改变时，调用文本类型判断
   useEffect(() => {
-    document.addEventListener('selectionchange', updatePopup);
+    if (showAskAI) {
+      // 当展示ask AI弹窗时，取消监听
+      console.log('remove--')
+      document.removeEventListener('selectionchange', updatePopup);
+    } else {
+      console.log('add--')
+      document.addEventListener('selectionchange', updatePopup);
+    }
     return () => {
       document.removeEventListener('selectionchange', updatePopup);
     };
-  }, [updatePopup]);
+  }, [updatePopup, showAskAI]);
 
   useEffect(() => {
     return mergeRegister(
@@ -372,11 +392,16 @@ function useFloatingTextFormatToolbar(
       }),
     );
   }, [editor, updatePopup]);
-
-  if (!isText || isLink || showAskAI) {
+  // 如果选中的不是文本或选中的区域为链接，则不展示组件
+  // 如果点击了ai书写选项，则展示AI书写弹窗, 在目标节点anchorElem中渲染该弹窗
+  if (showAskAI) {
+    return createPortal(<AIWritingModal anchorElem={anchorElem}/>,
+      anchorElem,)
+  }
+  if (!isText || isLink) {
     return null;
   }
-
+  
   return createPortal(
     <TextFormatFloatingToolbar
       editor={editor}
@@ -389,6 +414,16 @@ function useFloatingTextFormatToolbar(
       isSuperscript={isSuperscript}
       isUnderline={isUnderline}
       isCode={isCode}
+      onAIWritingOpenChange={(open) => {
+        // 如果下拉菜单打开，暂时移除selectionchange监听事件，下拉菜单消失时重新添加监听
+        if (open || showAskAI) {
+          console.log('remove!')
+          document.removeEventListener('selectionchange', updatePopup);
+        } else {
+          console.log('add!')
+          document.addEventListener('selectionchange', updatePopup);
+        }
+      }}
     />,
     anchorElem,
   );

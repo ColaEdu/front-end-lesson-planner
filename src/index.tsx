@@ -12,7 +12,7 @@ import './index.css';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux'
-import { ConfigProvider } from 'antd'
+import { ConfigProvider, App as AntdApp } from 'antd'
 import store from "./store";
 import App from './App';
 
@@ -43,9 +43,11 @@ createRoot(document.getElementById('root') as HTMLElement).render(
         },
       }}
     >
-      <Provider store={store}>
-        <App />
-      </Provider>
+      <AntdApp style={{height: '100%'}}>
+        <Provider store={store}>
+          <App />
+        </Provider>
+      </AntdApp>
     </ConfigProvider>
   </React.StrictMode>,
 );

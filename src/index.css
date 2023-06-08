@@ -408,8 +408,9 @@ i.bucket {
 }
 
 i.ai {
-  background-image: url(images/icons/type-ai.svg);
-  margin-top: 5px !important;
+  background-image: url(images/icons/type-ai.svg); 
+  margin-right: 1px; 
+  margin-top: -1px !important;
 }
 
 i.bold {

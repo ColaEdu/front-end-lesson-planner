@@ -1,60 +1,40 @@
 import {
   $getSelection,
   $isRangeSelection,
+  COMMAND_PRIORITY_LOW,
   createCommand,
   EditorState,
+  KEY_ESCAPE_COMMAND,
   LexicalCommand,
   LexicalEditor,
   RangeSelection,
 } from 'lexical';
-import { ThunderboltFilled, BulbFilled, SendOutlined, BulbOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Input, Modal, Drawer, Button, Tooltip, Spin } from 'antd';
-import ReactDOM, { createPortal } from 'react-dom';
+import { Button, Modal, App as AntdApp } from 'antd';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { mergeRegister, registerNestedElementResolver } from '@lexical/utils';
+import { mergeRegister } from '@lexical/utils';
 import './index.less';
 import { useDispatch, useSelector } from 'react-redux';
-import { setaskAI, setaskAISelection } from '../../reducers/globalSlice';
-import { $patchStyleText, $setBlocksType, createDOMRange, createRectsFromDOMRange } from '@lexical/selection';
-import { PLAYGROUND_TRANSFORMERS } from '../MarkdownTransformers';
-import useAIGenarate from './useAIGenarate';
-import AIGenPart from './AIGenPart';
-import PlainTextEditor from './PlainTextEditor';
+import { setaskAI } from '../../reducers/globalSlice';
+import { createDOMRange, createRectsFromDOMRange } from '@lexical/selection';
 import { $isRootTextContentEmpty, $rootTextContent } from '@lexical/text';
+import { AIIcon } from '../../images/icons/Icons';
+import ReactMarkdown from 'react-markdown';
 
 
 export const ASK_AI_COMMAND: LexicalCommand<any> =
   createCommand('ASK_AI_COMMAND');
 
-// ask_ai输入框onChange事件
-function useOnChange(
-  setContent: (text: string) => void,
-  setCanSubmit: (canSubmit: boolean) => void,
-) {
-  return useCallback(
-    (editorState: EditorState, _editor: LexicalEditor) => {
-      editorState.read(() => {
-        setContent($rootTextContent());
-        setCanSubmit(!$isRootTextContentEmpty(_editor.isComposing(), true));
-      });
-    },
-    [setContent],
-  );
-}
 
 const AskAIPlugin = ({
   anchorElem,
 }) => {
   const [editor] = useLexicalComposerContext();
+  const { modal } = AntdApp.useApp();
   const { showAskAI, askAISelection } = useSelector((state: any) => state.global)
-  const { applyAIText, openDrawer, setOpenDrawer, askAIText, setAskAIText, askAIToGenarate, aiAdvise, aiAdviseLoading,setAIAdviseLoading } = useAIGenarate(editor);
-  const [canSubmit, setCanSubmit] = useState(false);
-  const [showAskMenu, setShowAskMenu] = useState(true);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
-  // PlainText编辑器的ref
-  const editorRef = useRef<LexicalEditor>(null);
 
   /**
    * selection的形式会触发焦点变化，故展示ask ai时采取的是标亮之前选中块的逻辑
@@ -88,7 +68,6 @@ const AskAIPlugin = ({
         if (range !== null && boxElem !== null) {
           const { left, bottom, width } = range.getBoundingClientRect();
           const selectionRects = createRectsFromDOMRange(editor, range);
-          console.log('selectionRects--',selectionRects)
           let correctedLeft =
             selectionRects.length === 1 ? left + width / 2 - 125 : left - 125;
           if (correctedLeft < 10) {
@@ -109,8 +88,8 @@ const AskAIPlugin = ({
               elements[i] = elem;
               container.appendChild(elem);
             }
-            const color = '255, 212, 0';
-            const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.3);pointer-events:none;z-index: 5;`;
+            const color = '35, 131, 226';
+            const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.28);pointer-events:none;z-index: 5;`;
             elem.style.cssText = style;
           }
           for (let i = elementsLength - 1; i >= selectionRectsLength; i--) {
@@ -120,11 +99,6 @@ const AskAIPlugin = ({
           }
         }
       }
-      // if (!openDrawer) {
-      //   setTimeout(() => {
-      //     setShowAskMenu(true);
-      //   }, 1000)
-      // }
     });
   }, [editor, selectionState]);
 
@@ -144,7 +118,7 @@ const AskAIPlugin = ({
         body.removeChild(container);
       };
     }
-  }, [selectionState.container, updateLocation, openDrawer]);
+  }, [selectionState.container, updateLocation]);
 
   useEffect(() => {
     window.addEventListener('resize', updateLocation);
@@ -152,7 +126,25 @@ const AskAIPlugin = ({
       window.removeEventListener('resize', updateLocation);
     };
   }, [updateLocation]);
-
+  const handleConfirmCancelAI = () => {
+    modal.confirm({
+      title: '是否忽略AI的建议回复？',
+      content: '点击“忽略建议”将不采纳AI的建议回复',
+      centered: true,
+      icon: <AIIcon />,
+      okText: '忽略建议',
+      cancelText: '取消',
+      autoFocusButton: null,
+      // content: 'Some descriptions',
+      onOk() {
+        console.log('OK');
+        dispatch(setaskAI(false));
+      },
+      onCancel() {
+        console.log('Cancel');
+      },
+    })
+  }
   useEffect(() => {
     return mergeRegister(
       // 点击编辑器其他部分时，弹窗消失,高亮部分消失
@@ -160,67 +152,51 @@ const AskAIPlugin = ({
         editorState.read(() => {
           const selection = $getSelection();
           if (!tags.has('collaboration') && $isRangeSelection(selection)) {
-            dispatch(setaskAI(false))
+            console.log('select 为空！')
+            if (showAskAI) {
+              // 当点击编辑器其他选区/用户按键ESC/用户点击“取消按钮”时，展示二次询问用户是否取消ai弹窗
+              // bug复现步骤：1. 弹窗显示 2. 点击页面蒙版，弹窗消失 3. 弹窗再次出现
+              // 原因：页面触发了两次select
+              document.body.style.userSelect = 'none';
+              handleConfirmCancelAI();
+            }
           }
         });
       }),
     );
-  }, [editor]);
+  }, [editor, showAskAI]);
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleConfirmCancelAI();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [handleConfirmCancelAI]);
+  return <div ref={popupRef} className="AskAIPlugin_AskAIInputBox" >
+    <ReactMarkdown>
+      富文本编辑是现代应用程序中常见的功能之一，它可以使用户轻松地创建和编辑具有丰富格式的文本。为了实现这个功能，我们可以使用开源库来加快开发速度并提高可靠性。
 
-  const onEscape = (event: KeyboardEvent): boolean => {
-    event.preventDefault();
-    // cancelAddComment();
-    return true;
-  };
-  const onChange = useOnChange(setAskAIText, setCanSubmit);
-  const renderAIPopUp = (<>
-
-    <div className="AskAIPlugin_AskAIInputBox" ref={popupRef}>
-      <Spin spinning={aiAdviseLoading}>
-        <PlainTextEditor
-          className="AskAIPlugin_AskAIInputBox_Editor"
-          onEscape={onEscape}
-          onChange={onChange}
-          aiAdvise={aiAdvise}
-          editorRef={editorRef}
-        />
-        <div className='inputbox_container'>
-          <Button disabled={!canSubmit} size='small' type='primary' icon={<SendOutlined />}
-            onClick={() => {
-              setShowAskMenu(false);
-              setOpenDrawer(true);
-            }}
-          >
-            优化文本
-          </Button>
-          <Tooltip title="AI生成建议">
-            <BulbOutlined onClick={async () => {
-              await askAIToGenarate();
-            }} className="ask_ai_advise" />
-          </Tooltip>
-        </div>
-      </Spin>
-
+      在这份调研报告中，我们将研究一些目前比较流行的富文本开源库，以便我们在下一次开发富文本编辑器时能够做出更好的决策。
+    </ReactMarkdown>
+    <div className='aiWritingBar'>
+      <span>
+        <AIIcon />AI正在书写✍️ <LoadingOutlined />
+      </span>
+      <Button
+        type='text'
+        style={{ color: 'rgba(55, 53, 47, 0.5)' }}
+        onClick={handleConfirmCancelAI}
+      >
+        取消 ESC
+      </Button>
     </div>
-  </>)
-  return <>
-    {showAskAI &&
-      createPortal(
-        <>
-          {showAskMenu && renderAIPopUp}
-          <AIGenPart
-            openDrawer={openDrawer}
-            onApplyText={applyAIText}
-            askAIText={askAIText}
-            askAISelection={askAISelection}
-            onCancel={() => {
-              setOpenDrawer(false);
-            }} />
-        </>,
-        anchorElem,
-      )
-    }
-  </>
+
+  </div>
+
 }
 
 export default AskAIPlugin;

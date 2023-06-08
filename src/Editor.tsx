@@ -135,7 +135,6 @@ export default function Editor(): JSX.Element {
       window.removeEventListener('resize', updateViewPortWidth);
     };
   }, [isSmallWidthViewport]);
-  const globalData = useSelector(state => state.global);
   return (
     <>
       {isRichText && <ToolbarPlugin />}
@@ -144,8 +143,8 @@ export default function Editor(): JSX.Element {
           !isRichText ? 'plain-text' : ''
         }`}>
         {isMaxLength && <MaxLengthPlugin maxLength={30} />}
-        {globalData.showAskAI && <AskAIPlugin anchorElem={floatingAnchorElem}/>}
-        {/* <AskAIPlugin anchorElem={floatingAnchorElem}/> */}
+        {/* 目前该交互已弃用！暂时弃用这个插件！ */}
+        {/* {globalData.showAskAI && <AskAIPlugin anchorElem={floatingAnchorElem}/>} */}
         <DragDropPaste />
         <AutoFocusPlugin />
         <ClearEditorPlugin />
