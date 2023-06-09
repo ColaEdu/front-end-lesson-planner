@@ -37,6 +37,9 @@ import {
 } from '../SpeechToTextPlugin';
 import { printDocument } from '../../utils/printPDF'
 import {$generateHtmlFromNodes} from '@lexical/html';
+import { FloatButton } from 'antd';
+import { QuestionCircleOutlined, SyncOutlined } from '@ant-design/icons'; 
+import { DownLoadIcon } from '../../images/icons/Icons';
 
 
 async function sendEditorState(editor: LexicalEditor): Promise<void> {
@@ -159,7 +162,11 @@ export default function ActionsPlugin({
       root.selectEnd();
     });
   }, [editor]);
-
+  return (
+    <FloatButton.Group shape="square" style={{ right: 66 }}>
+    <FloatButton icon={<DownLoadIcon/>} />
+  </FloatButton.Group>
+  )
   return (
     <div className="actions">
       {/* {SUPPORT_SPEECH_RECOGNITION && (

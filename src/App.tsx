@@ -134,7 +134,10 @@ const App: React.FC = () => {
           <PlusOutlined />{collapsed ? '' : '新增教案'}
         </Button>
       </Sider>
-      <Layout className="site-layout" style={{ height: "100%" }}>
+      <Layout className="site-layout" style={{ 
+            display: 'flex',
+            flexDirection: 'column',
+      }}>
         <Header className="site-layout-background" style={{ padding: 0 }}>
           {React.createElement(
             collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
@@ -150,9 +153,12 @@ const App: React.FC = () => {
         </Header>
         <Content
           className="site-layout-background "
+          id="appContainer"
           style={{
             margin: "24px 16px",
             padding: 24,
+            flex: 1,
+            overflowY: 'auto',
             // minHeight: 280,
           }}
         >

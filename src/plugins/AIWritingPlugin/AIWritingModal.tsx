@@ -1,6 +1,7 @@
 import {
   $getSelection,
   $isRangeSelection,
+  $setSelection,
   COMMAND_PRIORITY_LOW,
   createCommand,
   EditorState,
@@ -33,6 +34,7 @@ const AskAIPlugin = ({
   const [editor] = useLexicalComposerContext();
   const { modal } = AntdApp.useApp();
   const { showAskAI, askAISelection } = useSelector((state: any) => state.global)
+  const [aiWriting, setAIWriting] = useState(true);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
 
@@ -50,7 +52,7 @@ const AskAIPlugin = ({
 
   const selectionRef = useRef<RangeSelection | null>(null);
   const updateLocation = useCallback(() => {
-    editor.getEditorState().read(() => {
+    editor.update(() => {
       const selection = $getSelection();
       // 计算选中区域的位置，并为选区添加背景蒙版
       if ($isRangeSelection(selection)) {
@@ -66,15 +68,18 @@ const AskAIPlugin = ({
         );
         const boxElem = popupRef.current;
         if (range !== null && boxElem !== null) {
-          const { left, bottom, width } = range.getBoundingClientRect();
+          const { left, bottom, top } = range.getBoundingClientRect();
+          const width = 700;
           const selectionRects = createRectsFromDOMRange(editor, range);
-          let correctedLeft =
-            selectionRects.length === 1 ? left + width / 2 - 125 : left - 125;
-          if (correctedLeft < 10) {
-            correctedLeft = 10;
-          }
+          const screenWidth = window.innerWidth;
+          const correctedLeft = (screenWidth - width) / 2;
           boxElem.style.left = `${correctedLeft}px`;
-          boxElem.style.top = `${bottom + 20}px`;
+          // 当bottom + 20 超过屏幕的一半，将元素置于选区上方
+          if (bottom + 20 > window.innerHeight / 2) {
+            boxElem.style.top = `${top - boxElem.offsetHeight}px`;
+          } else {
+            boxElem.style.top = `${bottom + 20}px`;
+          }
           const selectionRectsLength = selectionRects.length;
           const { container } = selectionState;
           const elements: Array<HTMLSpanElement> = selectionState.elements;
@@ -89,7 +94,7 @@ const AskAIPlugin = ({
               container.appendChild(elem);
             }
             const color = '35, 131, 226';
-            const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.28);pointer-events:none;z-index: 5;`;
+            const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.28);pointer-events:none;z-index: 99;`;
             elem.style.cssText = style;
           }
           for (let i = elementsLength - 1; i >= selectionRectsLength; i--) {
@@ -122,9 +127,17 @@ const AskAIPlugin = ({
 
   useEffect(() => {
     window.addEventListener('resize', updateLocation);
+    const appContainer = document.getElementById('appContainer');
+    if (appContainer) {
+      appContainer.addEventListener('scroll', updateLocation);
+    }
     return () => {
+      if (appContainer) {
+        appContainer.removeEventListener('scroll', updateLocation);
+      }
       window.removeEventListener('resize', updateLocation);
     };
+    
   }, [updateLocation]);
   const handleConfirmCancelAI = () => {
     modal.confirm({
@@ -145,6 +158,10 @@ const AskAIPlugin = ({
       },
     })
   }
+  // 当用户按ESC时，停止生成
+  const handleStopGenarate = () => {
+    setAIWriting(false);
+  }
   useEffect(() => {
     return mergeRegister(
       // 点击编辑器其他部分时，弹窗消失,高亮部分消失
@@ -154,7 +171,7 @@ const AskAIPlugin = ({
           if (!tags.has('collaboration') && $isRangeSelection(selection)) {
             console.log('select 为空！')
             if (showAskAI) {
-              // 当点击编辑器其他选区/用户按键ESC/用户点击“取消按钮”时，展示二次询问用户是否取消ai弹窗
+              // 当点击编辑器其他选区/用户点击“取消按钮”时，展示二次询问用户是否取消ai弹窗
               // bug复现步骤：1. 弹窗显示 2. 点击页面蒙版，弹窗消失 3. 弹窗再次出现
               // 原因：页面触发了两次select
               document.body.style.userSelect = 'none';
@@ -166,35 +183,58 @@ const AskAIPlugin = ({
     );
   }, [editor, showAskAI]);
   useEffect(() => {
+    // 当用户按ESC时，停止生成
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        handleConfirmCancelAI();
+        if (aiWriting) {
+          // 如果ai正在书写，停止生成
+          handleStopGenarate();
+        } else {
+          // 否则忽略ai建议
+          handleConfirmCancelAI();
+        }
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => {
       window.removeEventListener('keydown', handleEsc);
     };
-  }, [handleConfirmCancelAI]);
+  }, [handleConfirmCancelAI, aiWriting]);
   return <div ref={popupRef} className="AskAIPlugin_AskAIInputBox" >
-    <ReactMarkdown>
+    <ReactMarkdown className='ai_writing_genarate'>
       富文本编辑是现代应用程序中常见的功能之一，它可以使用户轻松地创建和编辑具有丰富格式的文本。为了实现这个功能，我们可以使用开源库来加快开发速度并提高可靠性。
 
       在这份调研报告中，我们将研究一些目前比较流行的富文本开源库，以便我们在下一次开发富文本编辑器时能够做出更好的决策。
     </ReactMarkdown>
     <div className='aiWritingBar'>
-      <span>
-        <AIIcon />AI正在书写✍️ <LoadingOutlined />
-      </span>
-      <Button
-        type='text'
-        style={{ color: 'rgba(55, 53, 47, 0.5)' }}
-        onClick={handleConfirmCancelAI}
-      >
-        取消 ESC
-      </Button>
-    </div>
+      {
+        aiWriting ? <>
+          <span>
+            <AIIcon />AI正在书写✍️ <LoadingOutlined />
+          </span>
+          <Button
+            type='text'
+            style={{ color: 'rgba(55, 53, 47, 0.5)' }}
+            onClick={handleConfirmCancelAI}
+          >
+            停止生成 ESC
+          </Button>
+        </> : <>
+          <span>
+            <AIIcon />以上是AI生成的建议
+          </span>
+          <Button
+            type='text'
+            style={{ color: 'rgba(55, 53, 47, 0.5)' }}
+            onClick={handleConfirmCancelAI}
+          >
+            忽略建议 ESC
+          </Button>
+        </>
+      }
 
+    </div>
+    
   </div>
 
 }
