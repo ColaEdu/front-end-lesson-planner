@@ -8,7 +8,118 @@ import { createLessonPrompt, CreatePrompt, systemPrompt } from "../utils/promptB
 import { useDispatch, useSelector } from "react-redux";
 import globalSlice, { callOpenAI } from "../reducers/globalSlice";
 import { getSummaryLessonText } from "../server/openai";
-
+const lessonList = {
+  '小学语文二年级上册部编版': [
+    {
+        "label": "小蝌蚪找妈妈",
+        "value": "小蝌蚪找妈妈"
+    },
+    {
+        "label": "我是什么",
+        "value": "我是什么"
+    },
+    {
+        "label": "植物妈妈有办法",
+        "value": "植物妈妈有办法"
+    },
+    {
+        "label": "梅花",
+        "value": "梅花"
+    },
+    {
+        "label": "场景歌",
+        "value": "场景歌"
+    },
+    {
+        "label": "树之课",
+        "value": "树之课"
+    },
+    {
+        "label": "拍手歌",
+        "value": "拍手歌"
+    },
+    {
+        "label": "田家四季歌",
+        "value": "田家四季歌"
+    },
+    {
+        "label": "曹冲称象",
+        "value": "曹冲称象"
+    },
+    {
+        "label": "红马的故事",
+        "value": "红马的故事"
+    },
+    {
+        "label": "一封信",
+        "value": "一封信"
+    },
+    {
+        "label": "妈妈睡了",
+        "value": "妈妈睡了"
+    },
+    {
+        "label": "古诗二首",
+        "value": "古诗二首"
+    },
+    {
+        "label": "黄山奇石",
+        "value": "黄山奇石"
+    },
+    {
+        "label": "日月潭",
+        "value": "日月潭"
+    },
+    {
+        "label": "葡萄沟",
+        "value": "葡萄沟"
+    },
+    {
+        "label": "坐井观天",
+        "value": "坐井观天"
+    },
+    {
+        "label": "寒号鸟",
+        "value": "寒号鸟"
+    },
+    {
+        "label": "我要的是葫芦",
+        "value": "我要的是葫芦"
+    },
+    {
+        "label": "大禹治水",
+        "value": "大禹治水"
+    },
+    {
+        "label": "朱德的扁担",
+        "value": "朱德的扁担"
+    },
+    {
+        "label": "难忘的泼水节",
+        "value": "难忘的泼水节"
+    },
+    {
+        "label": "古诗二首",
+        "value": "古诗二首"
+    },
+    {
+        "label": "雾在哪里",
+        "value": "雾在哪里"
+    },
+    {
+        "label": "风",
+        "value": "风"
+    },
+    {
+        "label": "雪孩子",
+        "value": "雪孩子"
+    },
+    {
+        "label": "狐假虎威",
+        "value": "狐假虎威"
+    }
+]
+}
 export const schema = {
   "type": "object",
   "properties": {
@@ -19,7 +130,7 @@ export const schema = {
       "required": true,
       "x-validator": [],
       "x-component-props": {
-        "placeholder": "请选择教学资源",
+        "placeholder": "请选择教学资源"
       },
       "x-decorator-props": {},
       "name": "teachingResource",
@@ -51,22 +162,23 @@ export const schema = {
       "x-index": 0
     },
     "teachingTheme": {
-      "type": "string",
       "title": "教学主题",
       "x-decorator": "FormItem",
-      "x-component": "Input.TextArea",
+      "x-component": "Select",
       "x-validator": [],
       "x-component-props": {
-        "placeholder": "请用简洁的语言描述教学主题，如：课文标题《小蝌蚪找妈妈》"
+        "placeholder": "请选择教学资源对应的课文",
+        "showSearch": true,
+        "options": lessonList['小学语文二年级上册部编版']
       },
       "x-decorator-props": {},
-      "name": "lessonTarget",
-      "description": "",
+      "name": "teachingTheme",
       "required": true,
-      "x-designable-id": "kbhvhvd60ps",
+      "x-designable-id": "8vtyh2yc13w",
       "x-index": 1
     }
   },
+  "x-designable-id": "vdikjwhtn1x"
 }
 
 const SchemaField = createSchemaField({
@@ -175,7 +287,7 @@ Lastly, we're constantly adding cool new features to this playground. So make su
     if (storedValues) {
       form.setFormState(state => state.values = {
         "teachingResource": JSON.parse(storedValues).teachingResource,
-        "teachingTheme": ""
+        "teachingTheme": undefined
       })
     }
   }, [props.visible])
