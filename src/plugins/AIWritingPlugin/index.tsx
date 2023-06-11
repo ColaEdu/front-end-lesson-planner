@@ -7,7 +7,7 @@ import { ImproveWritingIcon, LongerIcon, ShorterIcon, SpellIcon } from "../../im
 import { useDispatch, useSelector } from "react-redux";
 import { callOpenAIAdvice, setaskAI, setaskAIAdvice, setaskAIAdvicePrompt } from "../../reducers/globalSlice";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createParagraphNode, $createTextNode, $getSelection } from "lexical";
+import { $createParagraphNode, $createTextNode, $getSelection, TextNode } from "lexical";
 import { RangeSelection } from "lexical";
 
 const promptMap = {
@@ -89,18 +89,32 @@ export const useAIWriting = () => {
   const handleReplace = () => {
     editor.update(() => {
       const selection = askAISelection as RangeSelection;
-      // 获取selection的结束位置的节点的父节点
-      const parentNode = selection.focus.getNode().getParentOrThrow();
-      // 清空selection
-      selection.removeText();
+      const focusNode = selection.focus.getNode();
+      const parentNode = focusNode.getParent();
+    
+      // 获取选中文本的开始和结束位置
+      const startOffset = selection.anchor.offset;
+      const endOffset = selection.focus.offset;
+    
+      // 将focusNode在选中文本的开始和结束位置处分割成三个节点
+      const splitNodes = focusNode.splitText(startOffset, endOffset) as TextNode[];
+    
       // 创建一个新的段落节点
       const newParagraph = $createParagraphNode();
+    
       // 在新的段落节点中插入要替换的文本
       newParagraph.append($createTextNode(aiAdvice));
-      // 在父节点中插入新的段落节点
-      parentNode.insertAfter(newParagraph);
+    
+      // 在分割出的第二个节点之前插入新的段落节点
+      splitNodes[0].insertAfter(newParagraph);
+    
+      // 删除原来的选中文本所在的节点
+      // splitNodes[0].remove();
+      selection.removeText();
+    
       dispatch(setaskAI(false));
-    })
+    });
+    
   }
   
   
