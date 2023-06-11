@@ -75,22 +75,33 @@ export const useAIWriting = () => {
   const handleInsertAfter = () => {
     editor.update(() => {
       const selection = askAISelection as RangeSelection;
-      // 创建一个空的段落节点
-      const pNode = $createParagraphNode();
-      pNode.append($createTextNode(aiAdvice))
-      // 获取selection的结束位置的节点
-      const endNode = selection.focus.getNode();
-      // 获取endNode的父节点
-      const parentNode = endNode.getParentOrThrow();
-      // 在parentNode中插入新的段落节点
-      parentNode.insertAfter(pNode)
-    })
+      const focusNode = selection.focus.getNode();
+    
+      // 获取选中文本的开始和结束位置
+      const startOffset = selection.anchor.offset;
+      const endOffset = selection.focus.offset;
+    
+      // 将focusNode在选中文本的开始和结束位置处分割成三个节点
+      const splitNodes = focusNode.splitText(startOffset, endOffset) as TextNode[];
+    
+      // 创建一个新的段落节点
+      const newParagraph = $createParagraphNode();
+    
+      // 在新的段落节点中插入要替换的文本
+      newParagraph.append($createTextNode(aiAdvice));
+    
+      // 在分割出的第二个节点之前插入新的段落节点
+      splitNodes[0].insertAfter(newParagraph);
+    
+      // 在后面插入不删除之前选中的文本
+    
+      dispatch(setaskAI(false));
+    });
   }
   const handleReplace = () => {
     editor.update(() => {
       const selection = askAISelection as RangeSelection;
       const focusNode = selection.focus.getNode();
-      const parentNode = focusNode.getParent();
     
       // 获取选中文本的开始和结束位置
       const startOffset = selection.anchor.offset;
@@ -109,7 +120,6 @@ export const useAIWriting = () => {
       splitNodes[0].insertAfter(newParagraph);
     
       // 删除原来的选中文本所在的节点
-      // splitNodes[0].remove();
       selection.removeText();
     
       dispatch(setaskAI(false));
