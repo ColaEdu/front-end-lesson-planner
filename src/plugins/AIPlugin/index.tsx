@@ -20,10 +20,13 @@ const AIPlugin: React.FC = () => {
   }, [globalData.editId])
   React.useEffect(() => {
     editor.update(() => {
+      const root = $getRoot();
       const markdownString = globalData.text;
+      root.clear();
       $convertFromMarkdownString(
         markdownString,
         PLAYGROUND_TRANSFORMERS,
+        root
       )
     });
   }, [globalData.text])

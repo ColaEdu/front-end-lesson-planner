@@ -18,7 +18,7 @@ import SettingModal from "./settings/settingModal";
 // const EditorApp = lazy(() => import("./EditorApp"));
 const { Header, Sider, Content } = Layout;
 export const DEV = import.meta.env.MODE === "development";
-export const HOST_PREFIX = DEV ? '43.134.126.166:3001' : 'api.cola.app'
+export const HOST_PREFIX = DEV ? '129.226.81.213:3001' : 'api.cola.app'
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -137,6 +137,7 @@ const App: React.FC = () => {
       <Layout className="site-layout" style={{ 
             display: 'flex',
             flexDirection: 'column',
+            overflow: 'hidden'
       }}>
         <Header className="site-layout-background" style={{ padding: 0 }}>
           {React.createElement(
@@ -159,10 +160,11 @@ const App: React.FC = () => {
             padding: 24,
             flex: 1,
             overflowY: 'auto',
+            // zIndex: 999
             // minHeight: 280,
           }}
         >
-          {!editId ? renderEditorApp : emptyView}
+          {editId ? renderEditorApp : emptyView}
           {/* <Suspense fallback={<div>Loading...</div>}>
           </Suspense> */}
           {/* <FormComponent /> */}

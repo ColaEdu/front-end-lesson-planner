@@ -39,6 +39,7 @@ import AIWritingPlugin from '../AIWritingPlugin';
 import AIWritingModal from '../AIWritingPlugin/AIWritingModal';
 import { Modal } from 'antd';
 import { AIIcon } from '../../images/icons/Icons';
+import { PLAYGROUND_TRANSFORMERS } from '../MarkdownTransformers';
 
 function TextFormatFloatingToolbar({
   editor,
@@ -121,7 +122,9 @@ function TextFormatFloatingToolbar({
 
     const popupCharStylesEditorElem = popupCharStylesEditorRef.current;
     const nativeSelection = window.getSelection();
-
+    // const textContent = selection?.getTextContent();
+    // 每次改变选区时，都记录位置
+    dispatch(setaskAISelection(selection?.clone()));
     if (popupCharStylesEditorElem === null) {
       return;
     }
@@ -284,23 +287,7 @@ function useFloatingTextFormatToolbar(
   const [isCode, setIsCode] = useState(false);
   const { showAskAI } = useSelector((state: any) => state.global);
   const dispatch = useDispatch();
-  // 当点击编辑器其他选区/用户按键ESC/用户点击“取消按钮”时，二次询问用户是否取消ai弹窗
-  const handleConfirmCancelAI = () => {
-    if (showAskAI) {
-      Modal.confirm({
-        title: '是否忽略AI的建议回复？',
-        icon: <AIIcon />,
-        // content: 'Some descriptions',
-        onOk() {
-          console.log('OK');
-          dispatch(setaskAI(false));
-        },
-        onCancel() {
-          console.log('Cancel');
-        },
-      })
-    }
-  }
+
   // 获取选区的文本类型
   const updatePopup = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -311,7 +298,7 @@ function useFloatingTextFormatToolbar(
       const selection = $getSelection();
       const nativeSelection = window.getSelection();
       const rootElement = editor.getRootElement();
-
+      
       if (
         nativeSelection !== null &&
         (!$isRangeSelection(selection) ||
@@ -319,7 +306,7 @@ function useFloatingTextFormatToolbar(
           !rootElement.contains(nativeSelection.anchorNode))
       ) {
         setIsText(false);
-        handleConfirmCancelAI();
+        // handleConfirmCancelAI();
         return;
       }
 
@@ -395,13 +382,13 @@ function useFloatingTextFormatToolbar(
   // 如果选中的不是文本或选中的区域为链接，则不展示组件
   // 如果点击了ai书写选项，则展示AI书写弹窗, 在目标节点anchorElem中渲染该弹窗
   if (showAskAI) {
-    return createPortal(<AIWritingModal anchorElem={anchorElem}/>,
-      anchorElem,)
+  return createPortal(<AIWritingModal anchorElem={anchorElem} />,
+    anchorElem,)
   }
   if (!isText || isLink) {
     return null;
   }
-  
+
   return createPortal(
     <TextFormatFloatingToolbar
       editor={editor}

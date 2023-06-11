@@ -10,32 +10,72 @@ import {
   LexicalEditor,
   RangeSelection,
 } from 'lexical';
-import { LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, CloseOutlined } from '@ant-design/icons';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Button, Modal, App as AntdApp } from 'antd';
+import { Button, Modal, App as AntdApp, Dropdown, MenuProps } from 'antd';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { mergeRegister } from '@lexical/utils';
 import './index.less';
 import { useDispatch, useSelector } from 'react-redux';
-import { setaskAI } from '../../reducers/globalSlice';
+import { setAIAdviceWriting, setaskAI, setaskAIAdvice } from '../../reducers/globalSlice';
 import { createDOMRange, createRectsFromDOMRange } from '@lexical/selection';
 import { $isRootTextContentEmpty, $rootTextContent } from '@lexical/text';
-import { AIIcon } from '../../images/icons/Icons';
+import { AIIcon, DeleteIcon, ImproveWritingIcon, InsertIcon, LongerIcon, RetryIcon, ShorterIcon, SpellIcon } from '../../images/icons/Icons';
 import ReactMarkdown from 'react-markdown';
+import { streamOpenAIProxy } from '../../server/openai';
+import { useAIWriting } from '.';
 
 
 export const ASK_AI_COMMAND: LexicalCommand<any> =
   createCommand('ASK_AI_COMMAND');
 
+const items: MenuProps['items'] = [
+  {
+    key: 'replace',
+    label: (
+      <span className="ask_ai_menu"
+      >
+        <SpellIcon className="icon" />替换所选内容
+      </span>
+    ),
+  },
+  {
+    key: 'insertAfter',
+    label: (
+      <span className="ask_ai_menu">
+        <InsertIcon className="icon" />在下方插入
+      </span>
+    ),
+  },
+  {
+    key: 'retry',
+    label: (
+      <span className="ask_ai_menu">
+        <RetryIcon className="icon" />再试一次
+      </span>
+    ),
+  },
+  {
+    key: 'abandon',
+    label: (
+      <span className="ask_ai_menu">
+        <DeleteIcon className="icon" />舍弃
+      </span>
+    ),
+  },
+];
 
-const AskAIPlugin = ({
+const AIWritingModal = ({
   anchorElem,
 }) => {
   const [editor] = useLexicalComposerContext();
   const { modal } = AntdApp.useApp();
-  const { showAskAI, askAISelection } = useSelector((state: any) => state.global)
-  const [aiWriting, setAIWriting] = useState(true);
+  const { showAskAI, aiAdvice, aiAdvicePrompt, aiAdviceWriting } = useSelector((state: any) => state.global)
+  const { handleGenAdvice, handleInsertAfter, handleReplace } = useAIWriting();
+  // const [aiWriting, setAIWriting] = useState(true);
+
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const dropDownRef = useRef<HTMLDivElement | null>(null); // 下拉菜单ref
   const dispatch = useDispatch();
 
   /**
@@ -51,8 +91,16 @@ const AskAIPlugin = ({
   );
 
   const selectionRef = useRef<RangeSelection | null>(null);
+  // 更新 dropdown-container 位置
+  const updateDropdownPosition = () => {
+    const dropdownElem = dropDownRef.current;
+    if (dropdownElem !== null) {
+      dropdownElem.style.top = '100%';
+      dropdownElem.style.left = '0';
+    }
+  };
   const updateLocation = useCallback(() => {
-    editor.update(() => {
+    editor.getEditorState().read(() => {
       const selection = $getSelection();
       // 计算选中区域的位置，并为选区添加背景蒙版
       if ($isRangeSelection(selection)) {
@@ -80,6 +128,17 @@ const AskAIPlugin = ({
           } else {
             boxElem.style.top = `${bottom + 20}px`;
           }
+          // 更新 dropdown-container 位置
+          const dropdownElem = dropDownRef.current;
+          if (dropdownElem !== null) {
+            setTimeout(() => {
+              dropdownElem.style.top = '100%';
+              dropdownElem.style.left = '0';
+            }, 0);
+          }
+
+          // boxElem.style.top = `${bottom + 20}px`;
+
           const selectionRectsLength = selectionRects.length;
           const { container } = selectionState;
           const elements: Array<HTMLSpanElement> = selectionState.elements;
@@ -105,6 +164,7 @@ const AskAIPlugin = ({
         }
       }
     });
+
   }, [editor, selectionState]);
 
   useLayoutEffect(() => {
@@ -128,6 +188,7 @@ const AskAIPlugin = ({
   useEffect(() => {
     window.addEventListener('resize', updateLocation);
     const appContainer = document.getElementById('appContainer');
+    // 当container滚动时，计算高度，调整位置
     if (appContainer) {
       appContainer.addEventListener('scroll', updateLocation);
     }
@@ -137,8 +198,12 @@ const AskAIPlugin = ({
       }
       window.removeEventListener('resize', updateLocation);
     };
-    
+
   }, [updateLocation]);
+  // 当生成文本时，计算高度，调整位置
+  useEffect(() => {
+    updateLocation();
+  }, [aiAdvice])
   const handleConfirmCancelAI = () => {
     modal.confirm({
       title: '是否忽略AI的建议回复？',
@@ -150,7 +215,6 @@ const AskAIPlugin = ({
       autoFocusButton: null,
       // content: 'Some descriptions',
       onOk() {
-        console.log('OK');
         dispatch(setaskAI(false));
       },
       onCancel() {
@@ -160,37 +224,19 @@ const AskAIPlugin = ({
   }
   // 当用户按ESC时，停止生成
   const handleStopGenarate = () => {
-    setAIWriting(false);
+    setAIAdviceWriting(false);
   }
-  useEffect(() => {
-    return mergeRegister(
-      // 点击编辑器其他部分时，弹窗消失,高亮部分消失
-      editor.registerUpdateListener(({ editorState, tags }) => {
-        editorState.read(() => {
-          const selection = $getSelection();
-          if (!tags.has('collaboration') && $isRangeSelection(selection)) {
-            console.log('select 为空！')
-            if (showAskAI) {
-              // 当点击编辑器其他选区/用户点击“取消按钮”时，展示二次询问用户是否取消ai弹窗
-              // bug复现步骤：1. 弹窗显示 2. 点击页面蒙版，弹窗消失 3. 弹窗再次出现
-              // 原因：页面触发了两次select
-              document.body.style.userSelect = 'none';
-              handleConfirmCancelAI();
-            }
-          }
-        });
-      }),
-    );
-  }, [editor, showAskAI]);
+
   useEffect(() => {
     // 当用户按ESC时，停止生成
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        if (aiWriting) {
+        if (aiAdviceWriting) {
           // 如果ai正在书写，停止生成
           handleStopGenarate();
         } else {
           // 否则忽略ai建议
+          console.log('cancel reason: key down')
           handleConfirmCancelAI();
         }
       }
@@ -199,16 +245,36 @@ const AskAIPlugin = ({
     return () => {
       window.removeEventListener('keydown', handleEsc);
     };
-  }, [handleConfirmCancelAI, aiWriting]);
-  return <div ref={popupRef} className="AskAIPlugin_AskAIInputBox" >
+  }, [handleConfirmCancelAI, aiAdviceWriting]);
+  const handleDropdownClick = (e) => {
+    const key = e.key;
+    // 替换文本
+    if (key === 'replace') {
+      handleReplace()
+    }
+    // 插入到下方
+    if (key === 'insertAfter') {
+      handleInsertAfter();
+    }
+    // 再试一次
+    if (key === 'retry') {
+      handleGenAdvice(aiAdvicePrompt)
+    }
+    // 舍弃
+    if (key === 'abandon') {
+      dispatch(setaskAI(false));
+    }
+  }
+  return <div ref={popupRef} className="AskAIPlugin_AskAIInputBox" id='dropdown-container'>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+      <CloseOutlined className='closeIcon' onClick={handleConfirmCancelAI} />
+    </div>
     <ReactMarkdown className='ai_writing_genarate'>
-      富文本编辑是现代应用程序中常见的功能之一，它可以使用户轻松地创建和编辑具有丰富格式的文本。为了实现这个功能，我们可以使用开源库来加快开发速度并提高可靠性。
-
-      在这份调研报告中，我们将研究一些目前比较流行的富文本开源库，以便我们在下一次开发富文本编辑器时能够做出更好的决策。
+      {aiAdvice}
     </ReactMarkdown>
     <div className='aiWritingBar'>
       {
-        aiWriting ? <>
+        aiAdviceWriting ? <>
           <span>
             <AIIcon />AI正在书写✍️ <LoadingOutlined />
           </span>
@@ -217,7 +283,7 @@ const AskAIPlugin = ({
             style={{ color: 'rgba(55, 53, 47, 0.5)' }}
             onClick={handleConfirmCancelAI}
           >
-            停止生成 ESC
+            忽略建议 ESC
           </Button>
         </> : <>
           <span>
@@ -234,9 +300,21 @@ const AskAIPlugin = ({
       }
 
     </div>
-    
+    {/* <div ref={dropDownRef} className="dropdown-container" id="dropdown-container"></div> */}
+    {
+      aiAdviceWriting
+        ? null
+        : <Dropdown
+          menu={{ items, onClick: handleDropdownClick }}
+          // 下拉菜单的浮层随元素位置变化而改变
+          // getPopupContainer={() => document.getElementById('dropdown-container')}
+          placement="bottomLeft"
+          // arrow
+          open
+        // onOpenChange={onOpenChange}
+        ><div style={{position: 'absolute', top: '100%', left: 0}}></div></Dropdown>
+    }
   </div>
-
 }
 
-export default AskAIPlugin;
+export default AIWritingModal;
