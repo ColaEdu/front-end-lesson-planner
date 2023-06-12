@@ -15,10 +15,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { setaiActive } from "./reducers/globalSlice";
 import CreateModal from "./settings/createModal";
 import SettingModal from "./settings/settingModal";
+import { HOST_PREFIX, DEV } from './constants';
 // const EditorApp = lazy(() => import("./EditorApp"));
 const { Header, Sider, Content } = Layout;
-export const DEV = import.meta.env.MODE === "development";
-export const HOST_PREFIX = DEV ? '129.226.81.213:3001' : 'api.cola.app'
+
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);

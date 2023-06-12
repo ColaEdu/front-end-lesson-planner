@@ -40,6 +40,7 @@ import {$generateHtmlFromNodes} from '@lexical/html';
 import { FloatButton } from 'antd';
 import { QuestionCircleOutlined, SyncOutlined } from '@ant-design/icons'; 
 import { DownLoadIcon } from '../../images/icons/Icons';
+import { API_PREFIX } from '../../constants';
 
 
 async function sendEditorState(editor: LexicalEditor): Promise<void> {
@@ -162,9 +163,33 @@ export default function ActionsPlugin({
       root.selectEnd();
     });
   }, [editor]);
+  const handleDownLoadPDF = () => {
+    editor.getEditorState().read(async() => {
+      const markdown = $convertToMarkdownString(PLAYGROUND_TRANSFORMERS);
+      const response = await fetch(`//${API_PREFIX}/api/lessonpdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ markdown }),
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = '文件.pdf';
+        link.click();
+        URL.revokeObjectURL(url);
+      } else {
+        console.error('下载PDF失败');
+      }
+      
+    })
+  }
   return (
     <FloatButton.Group shape="square" style={{ right: 66 }}>
-    <FloatButton icon={<DownLoadIcon/>} />
+    <FloatButton icon={<DownLoadIcon/>} onClick={handleDownLoadPDF} />
   </FloatButton.Group>
   )
   return (

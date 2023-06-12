@@ -1,6 +1,5 @@
 // Import the required libraries and methods
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { HOST_PREFIX } from '../App';
 import { streamOpenAI, streamOpenAIProxy } from '../server/openai';
 // Define the initial state of the global store
 interface GlobalState {

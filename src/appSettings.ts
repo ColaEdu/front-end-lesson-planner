@@ -6,7 +6,7 @@
  *
  */
 
-import { DEV } from "./App";
+import { DEV } from "./constants";
 
 export type SettingName =
   | 'disableBeforeInput'

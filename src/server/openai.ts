@@ -1,4 +1,4 @@
-import { HOST_PREFIX } from "../App";
+import { HOST_PREFIX } from "../constants";
 
 export const getSummaryLessonText = async(params: any) => {
   const res = await fetch(`//${HOST_PREFIX}/similarText?teachingTheme=${params.teachingTheme}&textBookName=${params.textBookName}`, {

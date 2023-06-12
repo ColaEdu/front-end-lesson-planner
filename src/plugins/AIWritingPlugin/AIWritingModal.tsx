@@ -278,24 +278,24 @@ const AIWritingModal = ({
           <span>
             <AIIcon />AI正在书写✍️ <LoadingOutlined />
           </span>
-          <Button
+          {/* <Button
             type='text'
             style={{ color: 'rgba(55, 53, 47, 0.5)' }}
             onClick={handleConfirmCancelAI}
           >
             忽略建议 ESC
-          </Button>
+          </Button> */}
         </> : <>
           <span>
             <AIIcon />以上是AI生成的建议
           </span>
-          <Button
+          {/* <Button
             type='text'
             style={{ color: 'rgba(55, 53, 47, 0.5)' }}
             onClick={handleConfirmCancelAI}
           >
             忽略建议 ESC
-          </Button>
+          </Button> */}
         </>
       }
 
