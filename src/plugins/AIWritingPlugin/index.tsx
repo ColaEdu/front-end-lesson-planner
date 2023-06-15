@@ -5,7 +5,7 @@ import type { MenuProps } from 'antd';
 import './index.less'
 import { ImproveWritingIcon, LongerIcon, ShorterIcon, SpellIcon } from "../../images/icons/Icons";
 import { useDispatch, useSelector } from "react-redux";
-import { callOpenAIAdvice, setaskAI, setaskAIAdvice, setaskAIAdvicePrompt } from "../../reducers/globalSlice";
+import { callOpenAIAdvice, saveSelection, setaskAI, setaskAIAdvice, setaskAIAdvicePrompt, setaskAISelection } from "../../reducers/globalSlice";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $createParagraphNode, $createTextNode, $getSelection, TextNode } from "lexical";
 import { RangeSelection } from "lexical";
@@ -60,7 +60,7 @@ export const useAIWriting = () => {
   const { askAISelection, aiAdvice } = useSelector(state => state.global);
   const handleGenAdvice = (key) => {
     editor.getEditorState().read(() => {
-      const selection = askAISelection as RangeSelection;
+      const selection = $getSelection() as RangeSelection;
       const textContent = selection?.getTextContent();
       dispatch(callOpenAIAdvice(
         {
@@ -69,6 +69,7 @@ export const useAIWriting = () => {
         }
       ))
       dispatch(setaskAIAdvicePrompt(key))
+      // 展示askAI弹窗
       dispatch(setaskAI(true));
     })
   }
@@ -141,12 +142,16 @@ const AIWritingPlugin = ({
 }) => {
   const dispatch = useDispatch();
   const [aiDivice, setAIAdvice] = useState('');
-  const { handleGenAdvice } = useAIWriting();
+  const { handleGenAdvice, editor } = useAIWriting();
   const handleDropdownClick = (e) => {
     e.domEvent.preventDefault()
-    console.log(`Click on item ${e.key}`);
-    // 发送AI请求
-    handleGenAdvice(e.key)
+    // 保存编辑器之前选中的选区
+    editor.getEditorState().read(() => {
+      const selection = $getSelection();
+      dispatch(setaskAISelection(selection));
+      // 发送AI请求
+      handleGenAdvice(e.key)
+    });
   };
 
   return <Dropdown

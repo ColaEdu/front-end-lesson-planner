@@ -70,14 +70,14 @@ const AIWritingModal = ({
 }) => {
   const [editor] = useLexicalComposerContext();
   const { modal } = AntdApp.useApp();
-  const { showAskAI, aiAdvice, aiAdvicePrompt, aiAdviceWriting } = useSelector((state: any) => state.global)
+  const { showAskAI, aiAdvice, aiAdvicePrompt, aiAdviceWriting, askAISelection } = useSelector((state: any) => state.global)
   const { handleGenAdvice, handleInsertAfter, handleReplace } = useAIWriting();
   // const [aiWriting, setAIWriting] = useState(true);
-
+  
   const popupRef = useRef<HTMLDivElement | null>(null);
   const dropDownRef = useRef<HTMLDivElement | null>(null); // 下拉菜单ref
   const dispatch = useDispatch();
-
+  
   /**
    * selection的形式会触发焦点变化，故展示ask ai时采取的是标亮之前选中块的逻辑
    * 以下为标亮逻辑
@@ -89,7 +89,14 @@ const AIWritingModal = ({
     }),
     [],
   );
-
+  useEffect(() => {
+    // 根据askAISelection，恢复之前的选区
+    if (askAISelection) {
+      editor.update(() => {
+        $setSelection(askAISelection.clone())
+      });
+    }
+  }, [askAISelection])
   const selectionRef = useRef<RangeSelection | null>(null);
   // 更新 dropdown-container 位置
   const updateDropdownPosition = () => {
@@ -153,7 +160,10 @@ const AIWritingModal = ({
               container.appendChild(elem);
             }
             const color = '35, 131, 226';
-            const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;background-color:rgba(${color}, 0.28);pointer-events:none;z-index: 99;`;
+            const transparentColor = `rgba(${color}, 0)`;
+            
+            const style = `position:absolute;top:${selectionRect.top}px;left:${selectionRect.left}px;height:${selectionRect.height}px;width:${selectionRect.width}px;
+            background-color:rgba(${transparentColor}, 0.28);pointer-events:none;z-index: 99;`;
             elem.style.cssText = style;
           }
           for (let i = elementsLength - 1; i >= selectionRectsLength; i--) {
@@ -172,6 +182,7 @@ const AIWritingModal = ({
      * * bug： selection部分后出现，导致元素堆叠在输入框上方
     * 改进1: 先选中selection,后展示输入框与菜单
      */
+    
     updateLocation();
     const container = selectionState.container;
     // 标亮区块会生成在#root 之外
