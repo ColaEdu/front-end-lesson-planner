@@ -41,6 +41,7 @@ import { FloatButton } from 'antd';
 import { QuestionCircleOutlined, SyncOutlined } from '@ant-design/icons'; 
 import { DownLoadIcon } from '../../images/icons/Icons';
 import { API_PREFIX } from '../../constants';
+import { useSelector } from 'react-redux';
 
 
 async function sendEditorState(editor: LexicalEditor): Promise<void> {
@@ -93,6 +94,7 @@ export default function ActionsPlugin({
   const [isEditorEmpty, setIsEditorEmpty] = useState(true);
   const [modal, showModal] = useModal();
   const { isCollabActive } = useCollaborationContext();
+  const { aiGenerating, aiAdviceWriting } = useSelector((state: any) => state.global)
 
   useEffect(() => {
     return mergeRegister(
@@ -110,6 +112,14 @@ export default function ActionsPlugin({
       ),
     );
   }, [editor]);
+  // 监听aiGenerating变化，如果为true,则不可编辑， 监听aiAdviceWriting变化，如果为true,则不可编辑
+  useEffect(() => {
+    if (aiGenerating) {
+      editor.setEditable(false);
+    } else {
+      editor.setEditable(true);
+    }
+  }, [aiGenerating])
 
   useEffect(() => {
     return editor.registerUpdateListener(
@@ -217,7 +227,8 @@ export default function ActionsPlugin({
         title="Import"
         aria-label="Import editor state from JSON">
         <i className="import" />
-      </button> */}
+      </button> */}import { useSelector } from 'react-redux';
+
       <button
         className="action-button export"
         onClick={async() => {
