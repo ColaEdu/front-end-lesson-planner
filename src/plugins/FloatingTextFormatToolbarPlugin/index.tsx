@@ -116,7 +116,7 @@ function TextFormatFloatingToolbar({
       };
     }
   }, [popupCharStylesEditorRef]);
-  // 更新悬浮窗口的位置
+  // 更新文本格式浮动工具栏的位置
   const updateTextFormatFloatingToolbar = useCallback(() => {
     const selection = $getSelection();
 
@@ -130,6 +130,7 @@ function TextFormatFloatingToolbar({
     }
 
     const rootElement = editor.getRootElement();
+    // 如果选区不为空且根元素包含选区的锚点节点，则更新浮动工具栏的位置
     if (
       selection !== null &&
       nativeSelection !== null &&
