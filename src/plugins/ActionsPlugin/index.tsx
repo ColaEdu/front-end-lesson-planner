@@ -94,7 +94,7 @@ export default function ActionsPlugin({
   const [isEditorEmpty, setIsEditorEmpty] = useState(true);
   const [modal, showModal] = useModal();
   const { isCollabActive } = useCollaborationContext();
-  const { aiGenerating, aiAdviceWriting } = useSelector((state: any) => state.global)
+  const { aiGenerating, aiAdviceWriting, showAskAI } = useSelector((state: any) => state.global)
 
   useEffect(() => {
     return mergeRegister(

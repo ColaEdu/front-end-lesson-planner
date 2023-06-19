@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown, message, Space } from 'antd';
 import Icon from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -7,8 +7,10 @@ import { ImproveWritingIcon, LongerIcon, ShorterIcon, SpellIcon } from "../../im
 import { useDispatch, useSelector } from "react-redux";
 import { callOpenAIAdvice, saveSelection, setaskAI, setaskAIAdvice, setaskAIAdvicePrompt, setaskAISelection } from "../../reducers/globalSlice";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createParagraphNode, $createTextNode, $getSelection, TextNode } from "lexical";
+import { $createParagraphNode, $createRangeSelection, $createTextNode, $getRoot, $getSelection, $setSelection, TextNode } from "lexical";
 import { RangeSelection } from "lexical";
+// import { RangeSelection as RangeSelectionClass } from 'lexical';
+import { $patchStyleText } from "@lexical/selection";
 
 const promptMap = {
   improveWriting: `我需要你理解文本的内容和上下文，然后找出可能的改进之处。这可能包括提高文本的清晰度、改进词汇选择、增加吸引力或者提高文本的逻辑连贯性。`,
@@ -58,24 +60,20 @@ export const useAIWriting = () => {
   const [editor] = useLexicalComposerContext();
   const dispatch = useDispatch();
   const { askAISelection, aiAdvice } = useSelector(state => state.global);
-  const handleGenAdvice = (key) => {
-    editor.getEditorState().read(() => {
-      const selection = $getSelection() as RangeSelection;
-      const textContent = selection?.getTextContent();
-      dispatch(callOpenAIAdvice(
-        {
-          systemMessages: '你是一个写作助手，请根据用户的要求修改文本，不需要给出额外的提示！你的回答应该仅包括修改后的文本即可！',
-          userMessage: `${promptMap[key]},以下是我要修改的文本内容：${textContent}`
-        }
-      ))
-      dispatch(setaskAIAdvicePrompt(key))
-      // 展示askAI弹窗
-      dispatch(setaskAI(true));
-    })
+  const handleGenAdvice = (key, textContent) => {
+    dispatch(callOpenAIAdvice(
+      {
+        systemMessages: '你是一个写作助手，请根据用户的要求修改文本，不需要给出额外的提示！你的回答应该仅包括修改后的文本即可！',
+        userMessage: `${promptMap[key]},以下是我要修改的文本内容：${textContent}`
+      }
+    ))
+    dispatch(setaskAIAdvicePrompt(key))
+    // 展示askAI弹窗
+    dispatch(setaskAI(true));
   }
   const handleInsertAfter = () => {
     editor.update(() => {
-      const selection = askAISelection as RangeSelection;
+      const selection = askAISelection.clone();
       const focusNode = selection.focus.getNode();
     
       // 获取选中文本的开始和结束位置
@@ -101,7 +99,7 @@ export const useAIWriting = () => {
   }
   const handleReplace = () => {
     editor.update(() => {
-      const selection = askAISelection as RangeSelection;
+      const selection = askAISelection.clone();
       const focusNode = selection.focus.getNode();
     
       // 获取选中文本的开始和结束位置
@@ -143,14 +141,19 @@ const AIWritingPlugin = ({
   const dispatch = useDispatch();
   const [aiDivice, setAIAdvice] = useState('');
   const { handleGenAdvice, editor } = useAIWriting();
+  const { showAskAI,  askAISelection} = useSelector((state: any) => state.global)
+  // 如果展示ai书写弹窗，则添加背景，如果不展示，则设置背景为透明
+
   const handleDropdownClick = (e) => {
     e.domEvent.preventDefault()
     // 保存编辑器之前选中的选区
-    editor.getEditorState().read(() => {
-      const selection = $getSelection();
-      dispatch(setaskAISelection(selection));
+    editor.update(() => {
+      const selection = $getSelection()?.clone() as RangeSelection;
+      dispatch(setaskAISelection(selection.clone()));
+      // 设置选区颜色
+      $patchStyleText(selection, {'background': 'rgba(35, 131, 226, 0.28)'})
       // 发送AI请求
-      handleGenAdvice(e.key)
+      handleGenAdvice(e.key, selection?.getTextContent())
     });
   };
 
@@ -166,19 +169,6 @@ const AIWritingPlugin = ({
       aria-label="Format text as ai"
       onClick={(e) => {
         e.stopPropagation()
-        /**
-      * 展示ask ai
-      */
-        // editor.getEditorState().read(() => {
-        //   const selection = $getSelection();
-        //   // 无法转换选中区域为Markdown
-        //   const selectionContent = selection?.getTextContent();
-        //   // const nodes = selection?.getNodes();
-        //   // const selectionContent = $convertToMarkdownString();
-        //   // console.log('selectionContent--', selectionContent)
-        //   dispatch(setaskAISelection(selectionContent))
-        //   dispatch(setaskAI(true));
-        // })
       }}
     >
       <i className="format ai" />
