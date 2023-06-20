@@ -1,34 +1,91 @@
-## 设计稿
+# 指令调试指南
 
-https://www.figma.com/file/P9y11wjwHA6CqugJJ2Fuiw/ColaEdu?type=design&node-id=102-6345&t=ZrMX7swkJdItFkOD-0
+## 启动本项目
 
-## QUICK START 
-
-```
-npm run dev
-```
-
-## 部署
-
+执行以下命令后，在浏览器中访问http://localhost:3000，即可启动项目
 ```bash
-# 1. 推送代码至master
-# 2. 登录服务器
-ssh ubuntu@129.226.81.213
-# 3. 进入服务器代码仓库
-cd /home/ubuntu/codes/front-end-lesson-planner
-# 4. 在服务器上拉取最新的代码
-git pull
-# 5. 在服务器上打包 ? 目前存在问题， 采用本地打包后scp
-npm run build-prod
-scp -r build ubuntu@129.226.81.213:/home/ubuntu/codes/lesson-planner-frontend
+npm install #安装依赖
+npm run dev #在本地3000端口启动项目
 ```
 
-## bug记录
+## 系统指令和用户指令
 
-### editor.read 与 editor.update
+目前的指令逻辑分为系统指令、用户指令两部分。
 
-### Q: ask ai的选区展示与恢复
+系统指令：可以通过设置系统指令来调整模型的回答风格和内容，在本项目中用于设置教案的整体结构
 
-1. 点击ask ai，记录当前编辑器状态
-2. ai弹窗展示，高亮当前选区文本状态
-3. 点击关闭，恢复点击ask ai时的编辑器状态
+用户指令：可以通过设置用户指令让模型输出对应的内容，在本项目中用于生成教案、对教案进行调优
+
+## 创建教案指令设置
+
+**一、系统指令部分**
+
+由于历史原因，创建教案的系统指令代码在 https://github.com/ColaEdu/demo-lesson-planner-server/blob/master/genLessonPlan.js 中进行维护，以下是关键代码部分
+
+对代码进行修改后，需要在服务器的/home/ubuntu/codes/demo-lesson-planner-server文件夹中拉取代码，并重新启动服务：
+```bash
+# 拉取分支代码
+git pull origin master
+# 查看当前的活动窗口，退出之前的服务 
+screen -r
+# 启动更新后的服务
+screen npm run start
+```
+
+```js
+ const promptToSend = `1.我要你作为一个中国教案生成器。我将为您提供即将生成的详细信息，例如课文标题{{lesson}}, 
+    1. 如果课文标题为小蝌蚪找妈妈，则教案宗旨为“通过刚出生的小蝌蚪，生动形象地介绍各种动物的习性及状态”，想要达成的目标为“生动形象地教小学二年级学生”
+    2. 你的职责是根据标准教案格式为我生出可用的教案，其中考虑到跨学科等理念, 并在教案输出完毕后 换行输出 [END]。
+    3. 一份标准的教案格式如下:# 《{{lesson}}》教案
+    ## 一、教材分析
+    ## 二、核心素养
+    ## 三、教学重点
+    ## 四、教学难点
+    ## 五、课时安排
+    ## 六、教学资源准备
+    ## 七、教学过程
+```
+
+**二、用户指令部分**
+
+在本项目中的**src/server/openai.ts**文件中，可找到对应的用户指令：
+
+```js
+ messages: [
+  {
+    role: 'user',
+    content: `请按以下要求生成一篇标准化结构的教案：课本:${query.textBookName},课文标题:${query.title},课文内容:${query.content},`
+  }]
+```
+
+## ask ai指令设置
+
+**一、系统指令部分**
+
+在本项目的**src/plugins/AIWritingPlugin/index.tsx**文件中，可找到对应的系统指令：
+
+```js
+ callOpenAIAdvice({
+    systemMessages:
+      "你是一个写作助手，请根据用户的要求修改文本，不需要给出额外的提示！你的回答应该仅包括修改后的文本即可！",
+    userMessage: `${promptMap[key]},以下是我要修改的文本内容：${textContent}`,
+  })
+```
+
+**二、用户指令部分**
+
+在本项目中的**src/plugins/AIWritingPlugin/index.tsx**文件中，可找到对应的用户指令：
+
+
+```js
+const promptMap = {
+  // 优化文本
+  improveWriting: `我需要你理解文本的内容和上下文，然后找出可能的改进之处。这可能包括提高文本的清晰度、改进词汇选择、增加吸引力或者提高文本的逻辑连贯性。`,
+  // 更正拼写和语法
+  spell: `我需要你检查文本中的拼写错误和语法错误，并提供修正。`,
+  // 缩短内容
+  shorter: `我需要你理解文本的主要观点，然后以更简洁的方式表达出来。这可能包括删除冗余的信息，简化复杂的句子，或者将多个观点合并为一个。`,
+  // 扩展内容
+  longer: `在保持文本主题和观点不变的情况下，增加更多的细节或背景信息。这可能包括添加相关的例子，提供更深入的解释，或者引入新的观点。`,
+};
+```
