@@ -12,7 +12,7 @@ interface GlobalState {
   aiActive: boolean;
   aiAdviceWriting: boolean;
   aiGenerating: boolean;
-  askAISelection: any;
+  askAIState: any;
   askAISelectionBefore: any;
 }
 const initialState: GlobalState = {
@@ -26,7 +26,7 @@ const initialState: GlobalState = {
   // ask ai显示隐藏按钮，
   showAskAI: false,
   // askAI 选择的文本
-  askAISelection: null,
+  askAIState: null,
   // askAI 弹窗前的选区
   askAISelectionBefore: null,
   // 开发环境AI开关
@@ -79,7 +79,7 @@ const globalSlice = createSlice({
       state.showAskAI = action.payload;
     },
     setaskAISelection: (state, action: PayloadAction<any>) => {
-      state.askAISelection = action.payload;
+      state.askAIState = action.payload;
     },
     // 更新ai建议指令
     setaskAIAdvicePrompt: (state, action: PayloadAction<any>) => {

@@ -100,7 +100,7 @@ const AIWritingModal = ({ anchorElem }) => {
     aiAdvice,
     aiAdvicePrompt,
     aiAdviceWriting,
-    askAISelection,
+    askAIState,
   } = useSelector((state: any) => state.global);
   const { handleGenAdvice, handleInsertAfter, handleReplace } = useAIWriting();
   // const [aiWriting, setAIWriting] = useState(true);
@@ -124,13 +124,17 @@ const AIWritingModal = ({ anchorElem }) => {
   const selectionRef = useRef<RangeSelection | null>(null);
 
   const updateLocation = useCallback(() => {
-    editor.getEditorState().read(() => {
-      const selection = askAISelection;
+    const editorState = askAIState;
+    editorState.read(() => {
+      const selection = $getSelection();
       // 计算弹窗的位置，并为选区添加背景蒙版
-      if ($isRangeSelection(askAISelection)) {
+      if ($isRangeSelection(selection)) {
         selectionRef.current = selection.clone();
         const anchor = selection.anchor;
         const focus = selection.focus;
+        if (!anchor || !focus) {
+          return;
+        }
         const range = createDOMRange(
           editor,
           anchor.getNode(),
@@ -191,7 +195,7 @@ const AIWritingModal = ({ anchorElem }) => {
         }
       }
     });
-  }, [editor, selectionState, askAISelection]);
+  }, [editor, selectionState, askAIState]);
 
   useLayoutEffect(() => {
     /**
@@ -238,15 +242,10 @@ const AIWritingModal = ({ anchorElem }) => {
   useEffect(() => {
     updateLocation();
   }, [aiAdvice]);
-  // 当关闭askAI弹窗时，设置背景为透明
-  const setTransparent = () => {
-    editor.update(() => {
-      $patchStyleText(askAISelection, {
-        background: "transparent",
-      });
-      dispatch(setaskAI(false));
-      dispatch(setaskAISelection(null));
-    });
+  // 当关闭askAI弹窗时，恢复选区状态
+  const restoreEditorState = () => {
+    editor.setEditorState(askAIState);
+    dispatch(setaskAI(false));
   };
   const handleConfirmCancelAI = () => {
     modal.confirm({
@@ -259,7 +258,7 @@ const AIWritingModal = ({ anchorElem }) => {
       autoFocusButton: null,
       // content: 'Some descriptions',
       onOk() {
-        setTransparent();
+        restoreEditorState();
       },
       onCancel() {
         console.log("Cancel");
@@ -306,7 +305,7 @@ const AIWritingModal = ({ anchorElem }) => {
     }
     // 舍弃
     if (key === "abandon") {
-      setTransparent();
+      restoreEditorState();
     }
   };
   return (
@@ -357,8 +356,20 @@ const AIWritingModal = ({ anchorElem }) => {
         )}
       </div>
       {/* <div ref={dropDownRef} className="dropdown-container" id="dropdown-container"></div> */}
-      {aiAdviceWriting ? null : (
+      {/* {aiAdviceWriting ? null : (
         <Dropdown
+        menu={{ items, onClick: handleDropdownClick }}
+        // 下拉菜单的浮层随元素位置变化而改变
+        // getPopupContainer={() => document.getElementById('dropdown-container')}
+        placement="bottomLeft"
+        // arrow
+        open
+        // onOpenChange={onOpenChange}
+      >
+        <div ref={dropDownRef} style={{ position: "absolute", top: "100%", left: 0 }}></div>
+      </Dropdown>
+      )} */}
+       <Dropdown
           menu={{ items, onClick: handleDropdownClick }}
           // 下拉菜单的浮层随元素位置变化而改变
           // getPopupContainer={() => document.getElementById('dropdown-container')}
@@ -367,9 +378,8 @@ const AIWritingModal = ({ anchorElem }) => {
           open
           // onOpenChange={onOpenChange}
         >
-          <div style={{ position: "absolute", top: "100%", left: 0 }}></div>
+          <div ref={dropDownRef} style={{ position: "absolute", top: "100%", left: 0 }}></div>
         </Dropdown>
-      )}
     </div>
   );
 };
