@@ -95,13 +95,8 @@ const items: MenuProps["items"] = [
 const AIWritingModal = ({ anchorElem }) => {
   const [editor] = useLexicalComposerContext();
   const { modal } = AntdApp.useApp();
-  const {
-    showAskAI,
-    aiAdvice,
-    aiAdvicePrompt,
-    aiAdviceWriting,
-    askAIState,
-  } = useSelector((state: any) => state.global);
+  const { showAskAI, aiAdvice, aiAdvicePrompt, aiAdviceWriting, askAIState } =
+    useSelector((state: any) => state.global);
   const { handleGenAdvice, handleInsertAfter, handleReplace } = useAIWriting();
   // const [aiWriting, setAIWriting] = useState(true);
 
@@ -124,7 +119,10 @@ const AIWritingModal = ({ anchorElem }) => {
   const selectionRef = useRef<RangeSelection | null>(null);
 
   const updateLocation = useCallback(() => {
+    // const editorState = editor.parseEditorState(askAIState);
     const editorState = askAIState;
+    // 每次更新前要恢复之前的选区状态，以获取正确的anchor和focus，createDOMRange才能正确计算位置
+    editor.setEditorState(askAIState);
     editorState.read(() => {
       const selection = $getSelection();
       // 计算弹窗的位置，并为选区添加背景蒙版
@@ -132,9 +130,7 @@ const AIWritingModal = ({ anchorElem }) => {
         selectionRef.current = selection.clone();
         const anchor = selection.anchor;
         const focus = selection.focus;
-        if (!anchor || !focus) {
-          return;
-        }
+
         const range = createDOMRange(
           editor,
           anchor.getNode(),
@@ -142,6 +138,7 @@ const AIWritingModal = ({ anchorElem }) => {
           focus.getNode(),
           focus.offset
         );
+        console.log("range--", range);
         const boxElem = popupRef.current;
         if (range !== null && boxElem !== null) {
           const { left, bottom, top } = range.getBoundingClientRect();
@@ -151,21 +148,17 @@ const AIWritingModal = ({ anchorElem }) => {
           const correctedLeft = (screenWidth - width) / 2;
           boxElem.style.left = `${correctedLeft}px`;
           // 当bottom + 20 超过屏幕的一半，将元素置于选区上方
-          if (bottom + 20 > window.innerHeight / 2) {
-            boxElem.style.top = `${top - boxElem.offsetHeight}px`;
-          } else {
-            boxElem.style.top = `${bottom + 20}px`;
-          }
-          // 更新 dropdown-container 位置
-          const dropdownElem = dropDownRef.current;
-          if (dropdownElem !== null) {
-            setTimeout(() => {
-              dropdownElem.style.top = "100%";
-              dropdownElem.style.left = "0";
-            }, 0);
-          }
+          // if (bottom + 20 > window.innerHeight / 2) {
+          //   boxElem.style.top = `${top - boxElem.offsetHeight}px`;
+          // } else {
+          //   boxElem.style.top = `${bottom + 20}px`;
+          // }
+          // 有样式问题，暂时将元素置于屏幕中央
+          const screenHeight = window.innerHeight;
+          const boxHeight = popupRef.current?.offsetHeight || 0;
+          const screenTop = (screenHeight - boxHeight) / 2;
+          boxElem.style.top = `${screenTop}px`;
 
-          // boxElem.style.top = `${bottom + 20}px`;
 
           const selectionRectsLength = selectionRects.length;
           const { container } = selectionState;
@@ -248,22 +241,23 @@ const AIWritingModal = ({ anchorElem }) => {
     dispatch(setaskAI(false));
   };
   const handleConfirmCancelAI = () => {
-    modal.confirm({
-      title: "是否忽略AI的建议回复？",
-      content: "点击“忽略建议”将不采纳AI的建议回复",
-      centered: true,
-      icon: <AIIcon />,
-      okText: "忽略建议",
-      cancelText: "取消",
-      autoFocusButton: null,
-      // content: 'Some descriptions',
-      onOk() {
-        restoreEditorState();
-      },
-      onCancel() {
-        console.log("Cancel");
-      },
-    });
+    restoreEditorState();
+    // modal.confirm({
+    //   title: "是否忽略AI的建议回复？",
+    //   content: "点击“忽略建议”将不采纳AI的建议回复",
+    //   centered: true,
+    //   icon: <AIIcon />,
+    //   okText: "忽略建议",
+    //   cancelText: "取消",
+    //   autoFocusButton: null,
+    //   // content: 'Some descriptions',
+    //   onOk() {
+    //     restoreEditorState();
+    //   },
+    //   onCancel() {
+    //     console.log("Cancel");
+    //   },
+    // });
   };
   // 当用户按ESC时，停止生成
   const handleStopGenarate = () => {
@@ -309,77 +303,76 @@ const AIWritingModal = ({ anchorElem }) => {
     }
   };
   return (
-    <div
-      ref={popupRef}
-      className="AskAIPlugin_AskAIInputBox"
-      id="dropdown-container"
-    >
+    <div className="AskAIPlugin_AskAIMask">
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-        }}
+        ref={popupRef}
+        className="AskAIPlugin_AskAIInputBox"
+        id="dropdown-container"
       >
-        <CloseOutlined className="closeIcon" onClick={handleConfirmCancelAI} />
-      </div>
-      <ReactMarkdown className="ai_writing_genarate">{aiAdvice}</ReactMarkdown>
-      <div className="aiWritingBar">
-        {aiAdviceWriting ? (
-          <>
-            <span>
-              <AIIcon />
-              AI正在书写✍️ <LoadingOutlined />
-            </span>
-            {/* <Button
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <CloseOutlined
+            className="closeIcon"
+            onClick={handleConfirmCancelAI}
+          />
+        </div>
+        <ReactMarkdown className="ai_writing_genarate">
+          {aiAdvice}
+        </ReactMarkdown>
+        <div className="aiWritingBar">
+          {aiAdviceWriting ? (
+            <>
+              <span>
+                <AIIcon />
+                AI正在书写✍️ <LoadingOutlined />
+              </span>
+              {/* <Button
             type='text'
             style={{ color: 'rgba(55, 53, 47, 0.5)' }}
             onClick={handleConfirmCancelAI}
           >
             忽略建议 ESC
           </Button> */}
-          </>
-        ) : (
-          <>
-            <span>
-              <AIIcon />
-              以上是AI生成的建议
-            </span>
-            {/* <Button
+            </>
+          ) : (
+            <>
+              <span>
+                <AIIcon />
+                以上是AI生成的建议
+              </span>
+              {/* <Button
             type='text'
             style={{ color: 'rgba(55, 53, 47, 0.5)' }}
             onClick={handleConfirmCancelAI}
           >
             忽略建议 ESC
           </Button> */}
-          </>
+            </>
+          )}
+        </div>
+        {/* <div ref={dropDownRef} className="dropdown-container" id="dropdown-container"></div> */}
+        {aiAdviceWriting ? null : (
+          <Dropdown
+            menu={{ items, onClick: handleDropdownClick }}
+            // 下拉菜单的浮层随元素位置变化而改变
+            // getPopupContainer={() => document.getElementById('dropdown-container')}
+            placement="bottomLeft"
+            // arrow
+            open
+            // onOpenChange={onOpenChange}
+          >
+            <div
+              ref={dropDownRef}
+              style={{ position: "absolute", top: "100%", left: 0 }}
+            ></div>
+          </Dropdown>
         )}
       </div>
-      {/* <div ref={dropDownRef} className="dropdown-container" id="dropdown-container"></div> */}
-      {/* {aiAdviceWriting ? null : (
-        <Dropdown
-        menu={{ items, onClick: handleDropdownClick }}
-        // 下拉菜单的浮层随元素位置变化而改变
-        // getPopupContainer={() => document.getElementById('dropdown-container')}
-        placement="bottomLeft"
-        // arrow
-        open
-        // onOpenChange={onOpenChange}
-      >
-        <div ref={dropDownRef} style={{ position: "absolute", top: "100%", left: 0 }}></div>
-      </Dropdown>
-      )} */}
-       <Dropdown
-          menu={{ items, onClick: handleDropdownClick }}
-          // 下拉菜单的浮层随元素位置变化而改变
-          // getPopupContainer={() => document.getElementById('dropdown-container')}
-          placement="bottomLeft"
-          // arrow
-          open
-          // onOpenChange={onOpenChange}
-        >
-          <div ref={dropDownRef} style={{ position: "absolute", top: "100%", left: 0 }}></div>
-        </Dropdown>
     </div>
   );
 };

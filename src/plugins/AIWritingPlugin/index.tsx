@@ -23,13 +23,15 @@ import {
   $createParagraphNode,
   $createRangeSelection,
   $createTextNode,
+  $getPreviousSelection,
   $getRoot,
   $getSelection,
   $setSelection,
+  EditorState,
   TextNode,
 } from "lexical";
 import { RangeSelection } from "lexical";
-// import { RangeSelection as RangeSelectionClass } from 'lexical';
+// import { RangeSelectionasRangeSelectionClass, EditorState } from 'lexical';
 import { $patchStyleText } from "@lexical/selection";
 
 const promptMap = {
@@ -96,50 +98,33 @@ export const useAIWriting = () => {
     dispatch(setaskAI(true));
   };
   const handleInsertAfter = () => {
+    // 在调用更新选区方法前，需要正确地设置选区,首先恢复之前的选区状态
+    editor.setEditorState(askAIState);
     editor.update(() => {
-      const selection = askAIState.clone() as RangeSelection;
-
-      // // 获取选中文本的开始和结束位置
-      const startOffset = selection.anchor.offset;
-      const endOffset = selection.focus.offset;
-      // // 创建一个新的段落节点
-      const newParagraph = $createParagraphNode();
-      newParagraph.append($createTextNode(aiAdvice));
-      const focusNode = selection.focus.getNode();
-      focusNode.insertAfter(newParagraph);
-      // 设置选区为透明
-      $patchStyleText(selection, { background: "transparent" });
-      // 在后面插入不删除之前选中的文本
+      //  // 读取之前缓存的选区状态
+      const selection = $getSelection() as RangeSelection;
+      if (!selection) { 
+        return;
+      }
+      selection.modify('move', false, 'lineboundary');  // 移动焦点到选区的末尾
+      selection.insertParagraph();  // 在当前位置插入一个新的段落
+      selection.insertText(aiAdvice);// 插入新的文本
       dispatch(setaskAI(false));
     });
   };
   const handleReplace = () => {
+    // 在调用更新选区方法前，需要正确地设置选区,首先恢复之前的选区状态
+    editor.setEditorState(askAIState);
     editor.update(() => {
-      const selection = askAIState.clone() as RangeSelection;
-      // 替换文本关键代码
-      selection.insertText(aiAdvice);
-      $patchStyleText(selection, { background: "transparent" });
+      //  // 读取之前缓存的选区状态
+      const selection = $getSelection() as RangeSelection;
+      if (!selection) { 
+        return;
+      }
+      // // 替换文本关键代码
+      selection.deleteCharacter(false);// 删除选区内的所有字符
+      selection.insertText(aiAdvice);// 插入新的文本
       dispatch(setaskAI(false));
-      // const focusNode = selection.focus.getNode();
-
-      // // 获取选中文本的开始和结束位置
-      // const startOffset = selection.anchor.offset;
-      // const endOffset = selection.focus.offset;
-
-      // // 将focusNode在选中文本的开始和结束位置处分割成三个节点
-      // const splitNodes = focusNode.splitText(startOffset, endOffset) as TextNode[];
-
-      // // 创建一个新的段落节点
-      // const newParagraph = $createParagraphNode();
-
-      // // 在新的段落节点中插入要替换的文本
-      // newParagraph.append($createTextNode(aiAdvice));
-
-      // // 在分割出的第二个节点之前插入新的段落节点
-      // splitNodes[0].insertAfter(newParagraph);
-
-      // // 删除原来的选中文本所在的节点
-      // selection.removeText();
     });
   };
 
@@ -158,19 +143,19 @@ const AIWritingPlugin = ({ onOpenChange }) => {
   const { showAskAI, askAIState } = useSelector(
     (state: any) => state.global
   );
-  // 如果展示ai书写弹窗，则添加背景，如果不展示，则设置背景为透明
-
+  
   const handleDropdownClick = (e) => {
     e.domEvent.preventDefault();
-    // 保存当前编辑器状态
-    const editorState = editor.getEditorState();
     editor.update(() => {
       const selection = $getSelection() as RangeSelection;
       // 设置选区颜色
       $patchStyleText(selection, { background: "rgba(35, 131, 226, 0.28)" });
     });
 
-    editorState.read(() => {
+    // 保存当前编辑器状态
+    const editorState = editor.getEditorState().clone();
+   
+    editor.getEditorState().read(() => {
       const selection = $getSelection() as RangeSelection;
       // 发送AI请求
       handleGenAdvice(e.key, selection?.getTextContent());
