@@ -22,3 +22,13 @@ git pull
 npm run build-prod
 scp -r build ubuntu@129.226.81.213:/home/ubuntu/codes/lesson-planner-frontend
 ```
+
+## bug记录
+
+### editor.read 与 editor.update
+
+### Q: ask ai的选区展示与恢复
+
+1. 点击ask ai，记录当前编辑器状态
+2. ai弹窗展示，高亮当前选区文本状态
+3. 点击关闭，恢复点击ask ai时的编辑器状态

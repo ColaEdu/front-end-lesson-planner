@@ -6,53 +6,65 @@
 
 .ai_writing_genarate {
   user-select: auto !important;
-}
-
-.AskAIPlugin_AskAIInputBox {
-  display: block;
-  position: fixed;
-  width: 700px;
-  max-height: 500px;
+  max-height: 300px;
   overflow: auto;
-  // min-height: 80px;
-  box-shadow: 0px 0px 0px 1px rgba(15, 15, 15, 0.05), 0px 3px 6px rgba(15, 15, 15, 0.1), 0px 9px 24px rgba(15, 15, 15, 0.2);
-  border-radius: 6px;
-  z-index: 24;
-  animation: show-input-box 0.4s ease;
-  background: #ffffff;
-  padding: 10px 20px;
+}
+.AskAIPlugin_AskAIMask {
+  position: fixed; /* Positioned relative to the viewport */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+  z-index: 9999; /* Ensure that the overlay is on top of other elements */
+  pointer-events: auto; /* Capture all click events */
+  .AskAIPlugin_AskAIInputBox {
+    display: block;
+    position: fixed;
+    width: 700px;
 
-  .dropdown-container {
-    position: absolute;
-    width: 320px;
-    height: 137px;
-    // left: 196px;
-    // top: 514px;
-
-    background: #FFFFFF;
-    box-shadow: 0px 0px 0px 1px rgba(15, 15, 15, 0.05), 0px 3px 6px rgba(15, 15, 15, 0.1), 0px 9px 24px rgba(15, 15, 15, 0.2);
+    // min-height: 80px;
+    box-shadow: 0px 0px 0px 1px rgba(15, 15, 15, 0.05),
+      0px 3px 6px rgba(15, 15, 15, 0.1), 0px 9px 24px rgba(15, 15, 15, 0.2);
     border-radius: 6px;
-    top: 100%; // 让Dropdown组件位于AskAIPlugin_AskAIInputBox的下方
-    left: 0; // 让Dropdown组件与AskAIPlugin_AskAIInputBox左对齐
-  }
+    z-index: 10000;
+    animation: show-input-box 0.4s ease;
+    background: #ffffff;
+    padding: 10px 20px;
 
-  .aiWritingBar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+    .dropdown-container {
+      position: absolute;
+      width: 320px;
+      height: 137px;
+      // left: 196px;
+      // top: 514px;
 
-  .closeIcon {
-    margin: 0px 15px 0px 0;
-    font-size: 16px;
-    color: rgba(0, 0, 0, 0.45);
-    font-weight: 600;
-    cursor: pointer;
+      background: #ffffff;
+      box-shadow: 0px 0px 0px 1px rgba(15, 15, 15, 0.05),
+        0px 3px 6px rgba(15, 15, 15, 0.1), 0px 9px 24px rgba(15, 15, 15, 0.2);
+      border-radius: 6px;
+      top: 100%; // 让Dropdown组件位于AskAIPlugin_AskAIInputBox的下方
+      left: 0; // 让Dropdown组件与AskAIPlugin_AskAIInputBox左对齐
+    }
 
-    :hover {
-      color: rgba(0, 0, 0, 0.88);
-      background-color: rgba(0, 0, 0, 0.06);
-      text-decoration: none;
+    .aiWritingBar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .closeIcon {
+      margin: 0px 15px 0px 0;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.45);
+      font-weight: 600;
+      cursor: pointer;
+
+      :hover {
+        color: rgba(0, 0, 0, 0.88);
+        background-color: rgba(0, 0, 0, 0.06);
+        text-decoration: none;
+      }
     }
   }
 }

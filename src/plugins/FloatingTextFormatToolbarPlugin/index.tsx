@@ -53,6 +53,7 @@ function TextFormatFloatingToolbar({
   isSubscript,
   isSuperscript,
   onAIWritingOpenChange,
+  showAskAI,
 }: {
   editor: LexicalEditor;
   anchorElem: HTMLElement;
@@ -64,6 +65,7 @@ function TextFormatFloatingToolbar({
   isSubscript: boolean;
   isSuperscript: boolean;
   isUnderline: boolean;
+  showAskAI: boolean;
   onAIWritingOpenChange: (open: boolean) => void;
 }): JSX.Element {
   const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
@@ -122,9 +124,7 @@ function TextFormatFloatingToolbar({
 
     const popupCharStylesEditorElem = popupCharStylesEditorRef.current;
     const nativeSelection = window.getSelection();
-    // const textContent = selection?.getTextContent();
     // 每次改变选区时，都记录位置
-    dispatch(setaskAISelection(selection?.clone()));
     if (popupCharStylesEditorElem === null) {
       return;
     }
@@ -357,10 +357,8 @@ function useFloatingTextFormatToolbar(
   useEffect(() => {
     if (showAskAI) {
       // 当展示ask AI弹窗时，取消监听
-      console.log('remove--')
       document.removeEventListener('selectionchange', updatePopup);
     } else {
-      console.log('add--')
       document.addEventListener('selectionchange', updatePopup);
     }
     return () => {
@@ -402,13 +400,12 @@ function useFloatingTextFormatToolbar(
       isSuperscript={isSuperscript}
       isUnderline={isUnderline}
       isCode={isCode}
+      showAskAI={showAskAI}
       onAIWritingOpenChange={(open) => {
         // 如果下拉菜单打开，暂时移除selectionchange监听事件，下拉菜单消失时重新添加监听
         if (open || showAskAI) {
-          console.log('remove!')
           document.removeEventListener('selectionchange', updatePopup);
         } else {
-          console.log('add!')
           document.addEventListener('selectionchange', updatePopup);
         }
       }}
