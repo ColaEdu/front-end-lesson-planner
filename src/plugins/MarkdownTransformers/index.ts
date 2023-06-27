@@ -287,7 +287,7 @@ export const PLAYGROUND_TRANSFORMERS: Array<Transformer> = [
   HR,
   IMAGE,
   EMOJI,
-  EQUATION,
+  // EQUATION,
   TWEET,
   CHECK_LIST,
   ...ELEMENT_TRANSFORMERS,
