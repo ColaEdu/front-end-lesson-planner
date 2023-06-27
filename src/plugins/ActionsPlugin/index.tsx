@@ -35,7 +35,6 @@ import {
   SPEECH_TO_TEXT_COMMAND,
   SUPPORT_SPEECH_RECOGNITION,
 } from '../SpeechToTextPlugin';
-import { printDocument } from '../../utils/printPDF'
 import {$generateHtmlFromNodes} from '@lexical/html';
 import { FloatButton } from 'antd';
 import { QuestionCircleOutlined, SyncOutlined } from '@ant-design/icons'; 
@@ -227,57 +226,8 @@ export default function ActionsPlugin({
         title="Import"
         aria-label="Import editor state from JSON">
         <i className="import" />
-      </button> */}import { useSelector } from 'react-redux';
-
-      <button
-        className="action-button export"
-        onClick={async() => {
-
-          function prettifyHTML(node: Element, level: number) {
-            const indentBefore = new Array(level++ + 1).join('  ');
-            const indentAfter = new Array(level - 1).join('  ');
-            let textNode;
-
-            for (let i = 0; i < node.children.length; i++) {
-              textNode = document.createTextNode('\n' + indentBefore);
-              node.insertBefore(textNode, node.children[i]);
-              prettifyHTML(node.children[i], level);
-              if (node.lastElementChild === node.children[i]) {
-                textNode = document.createTextNode('\n' + indentAfter);
-                node.appendChild(textNode);
-              }
-            }
-
-            return node;
-          }
-
-          function printPrettyHTML(str: string) {
-            const div = document.createElement('div');
-            div.innerHTML = str.trim();
-            return prettifyHTML(div, 0).innerHTML;
-          }
-          let htmlString = '';
-          editor.getEditorState().read(() => {
-            htmlString = printPrettyHTML($generateHtmlFromNodes(editor));
-          });
-          console.log('htmlString--', htmlString)
-          await printDocument(`<div>${htmlString}</div>`)
-          // return htmlString;
-          // editor.getEditorState().read(async () => {
-          //   const markdown = await $convertToMarkdownString(PLAYGROUND_TRANSFORMERS)
-          //   console.log('markdown--', markdown)
-          //   await printDocument('editor')
-          // })
-
-          // exportFile(editor, {
-          //   fileName: `Playground ${new Date().toISOString()}`,
-          //   source: 'Playground',
-          // })
-        }}
-        title="Export"
-        aria-label="Export editor state to JSON">
-        <i className="export" />
-      </button>
+      </button> */}
+   
       <button
         className="action-button clear"
         disabled={isEditorEmpty}

@@ -38,15 +38,11 @@ import AutoLinkPlugin from "./plugins/AutoLinkPlugin";
 import CodeActionMenuPlugin from "./plugins/CodeActionMenuPlugin";
 import CodeHighlightPlugin from "./plugins/CodeHighlightPlugin";
 import CollapsiblePlugin from "./plugins/CollapsiblePlugin";
-import CommentPlugin from "./plugins/CommentPlugin";
 import ComponentPickerPlugin from "./plugins/ComponentPickerPlugin";
 import DragDropPaste from "./plugins/DragDropPastePlugin";
 import DraggableBlockPlugin from "./plugins/DraggableBlockPlugin";
 import EmojiPickerPlugin from "./plugins/EmojiPickerPlugin";
 import EmojisPlugin from "./plugins/EmojisPlugin";
-import EquationsPlugin from "./plugins/EquationsPlugin";
-import ExcalidrawPlugin from "./plugins/ExcalidrawPlugin";
-import FigmaPlugin from "./plugins/FigmaPlugin";
 import FloatingLinkEditorPlugin from "./plugins/FloatingLinkEditorPlugin";
 import FloatingTextFormatToolbarPlugin from "./plugins/FloatingTextFormatToolbarPlugin";
 import HTMLPlugin from "./plugins/AIPlugin";
@@ -66,12 +62,9 @@ import TableOfContentsPlugin from "./plugins/TableOfContentsPlugin";
 import { TablePlugin as NewTablePlugin } from "./plugins/TablePlugin";
 import ToolbarPlugin from "./plugins/ToolbarPlugin";
 import TreeViewPlugin from "./plugins/TreeViewPlugin";
-import TwitterPlugin from "./plugins/TwitterPlugin";
-import YouTubePlugin from "./plugins/YouTubePlugin";
 import PlaygroundEditorTheme from "./themes/PlaygroundEditorTheme";
 import ContentEditable from "./ui/ContentEditable";
 import Placeholder from "./ui/Placeholder";
-import AskAIPlugin from "./plugins/AskAIPlugin";
 import { Spin } from "antd";
 const skipCollaborationInit =
   // @ts-ignore
@@ -147,8 +140,6 @@ export default function Editor(): JSX.Element {
       >
         <Spin tip="AI正在书写✍️" spinning={aiGenerating}>
           {isMaxLength && <MaxLengthPlugin maxLength={30} />}
-          {/* 目前该交互已弃用！暂时弃用这个插件！ */}
-          {/* {globalData.showAskAI && <AskAIPlugin anchorElem={floatingAnchorElem}/>} */}
           <DragDropPaste />
           <AutoFocusPlugin />
           <ClearEditorPlugin />
@@ -215,13 +206,8 @@ export default function Editor(): JSX.Element {
               <ImagesPlugin />
               <LinkPlugin />
               <PollPlugin />
-              {/* <TwitterPlugin /> */}
-              {/* <YouTubePlugin /> */}
-              {/* <FigmaPlugin /> */}
               {!isEditable && <LexicalClickableLinkPlugin />}
               <HorizontalRulePlugin />
-              <EquationsPlugin />
-              <ExcalidrawPlugin />
               <TabFocusPlugin />
               <TabIndentationPlugin />
               <CollapsiblePlugin />
