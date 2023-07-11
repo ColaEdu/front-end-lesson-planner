@@ -31,7 +31,6 @@ import { createWebsocketProvider } from "./collaboration";
 import { useSettings } from "./context/SettingsContext";
 import { useSharedHistoryContext } from "./context/SharedHistoryContext";
 import TableCellNodes from "./nodes/TableCellNodes";
-import ActionsPlugin from "./plugins/ActionsPlugin";
 import AutocompletePlugin from "./plugins/AutocompletePlugin";
 import AutoEmbedPlugin from "./plugins/AutoEmbedPlugin";
 import AutoLinkPlugin from "./plugins/AutoLinkPlugin";
@@ -66,6 +65,7 @@ import PlaygroundEditorTheme from "./themes/PlaygroundEditorTheme";
 import ContentEditable from "./ui/ContentEditable";
 import Placeholder from "./ui/Placeholder";
 import { Spin } from "antd";
+import { DownLoadIcon, ShareIcon } from "./images/icons/Icons";
 const skipCollaborationInit =
   // @ts-ignore
   window.parent != null && window.parent.frames.right === window;
@@ -244,7 +244,6 @@ export default function Editor(): JSX.Element {
           )}
           {isAutocomplete && <AutocompletePlugin />}
           <div>{showTableOfContents && <TableOfContentsPlugin />}</div>
-          <ActionsPlugin isRichText={isRichText} />
         </Spin>
       </div>
       {showTreeView && <TreeViewPlugin />}

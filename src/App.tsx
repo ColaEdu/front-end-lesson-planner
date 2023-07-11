@@ -14,6 +14,7 @@ import {
   OverViewIcon,
   SettingIcon,
 } from "./images/icons/Icons";
+import LessonRight from "./pages/LessonPlanner/Right";
 const { Header, Sider, Content } = Layout;
 
 const App: React.FC = () => {
@@ -33,7 +34,7 @@ const App: React.FC = () => {
   );
   return (
     <Router>
-      <Layout style={{ height: "100%", display: 'flex'  }}>
+      <Layout style={{ height: "100%", display: "flex" }}>
         <Sider
           width={232}
           style={{
@@ -104,9 +105,8 @@ const App: React.FC = () => {
             className="site-layout-background "
             id="appContainer"
             style={{
-              padding: 24,
+              padding: '10px 24px',
               flex: 1,
-              overflowY: "auto",
             }}
           >
             <Routes>
@@ -115,7 +115,12 @@ const App: React.FC = () => {
             </Routes>
           </Content>
         </Layout>
-        <div className="right-content"></div>
+        <div className="right-content">
+          <Routes>
+            <Route path="/" element={<LessonRight />} />
+            <Route path="/lessonPlanner" element={<LessonRight />} />
+          </Routes>
+        </div>
       </Layout>
     </Router>
   );

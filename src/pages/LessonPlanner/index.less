@@ -1,0 +1,52 @@
+.right-content {
+  .right-content-inner {
+    border: 1px solid #e1e1e1;
+    width: 304px;
+    margin: auto;
+    border-radius: 16px;
+    padding: 12px;
+    .toolbutton:not(:first-child) {
+      border-top: 1px solid #e1e1e1;
+    }
+    .toolbutton {
+      color: #000000;
+      font-size: 14px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .icon {
+        color: #A7A7A7;
+        font-size: 16px;
+        margin-right: 5px;
+        cursor: pointer;
+      }
+    }
+  }
+  .right-content-inner-history {
+    margin-top: 83px;
+    span {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .history-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+
+// 当屏幕宽度小于1000px时，右侧内容隐藏
+@media screen and (max-width: 1000px) {
+  .lessonplan-form {
+    padding-right: 0px;
+  }
+}
+@media screen and (min-width: 1000px) {
+  .lessonplan-form {
+    padding-right: 200px;
+  }
+}
+
