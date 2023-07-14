@@ -1,178 +1,177 @@
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  UploadOutlined,
-  UserOutlined,
-  VideoCameraOutlined,
-  // PlusCircleOutlined,
   FileTextOutlined,
-  PlusOutlined,
-  SettingOutlined
 } from "@ant-design/icons";
-import { Layout, Menu, Button, Empty, Switch } from "antd";
-import React, { useState, lazy, Suspense, useEffect } from "react";
+import { Layout, Menu } from "antd";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Routes,
+  useNavigate,
+  Navigate,
+} from "react-router-dom";
+import LessonPlanner from "./pages/LessonPlanner";
+import "./styles.less";
+import {
+  LessonPlannerIcon,
+  LogoutIcon,
+  OverViewIcon,
+  SettingIcon,
+} from "./images/icons/Icons";
+import LessonRight from "./pages/LessonPlanner/Right";
+import Login from "./pages/Login";
+import { API_PREFIX } from "./constants";
 import { useDispatch, useSelector } from "react-redux";
-import { setaiActive } from "./reducers/globalSlice";
-import CreateModal from "./settings/createModal";
-import SettingModal from "./settings/settingModal";
-import { HOST_PREFIX, DEV } from './constants';
-// const EditorApp = lazy(() => import("./EditorApp"));
+import { setLoggedIn } from "./reducers/globalSlice";
 const { Header, Sider, Content } = Layout;
 
 const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [settingVisible, setSettingVisible] = useState(false);
-  const [createVisible, setCreateVisible] = useState(false);
-  const { editId, aiActive } = useSelector((state: any) => state.global)
-  const dispatch = useDispatch()
-  const [EditorApp, setEditorApp] = useState<any>(null);
-
-  useEffect(() => {
-    window.requestIdleCallback(async () => {
-      const { default: LoadedEditorApp } = await import('./EditorApp');
-      setEditorApp(() => LoadedEditorApp);
-    });
-  }, []);
-  useEffect(() => {
-    if (DEV) {
-      dispatch(setaiActive(false))
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loggedIn } = useSelector((state) => state.global);
+  useLayoutEffect(() => {
+    // 校验token是否过期
+    const token = localStorage.getItem("token");
+    if (!token) {
+      dispatch(setLoggedIn(false));
+      navigate("/login");
+      // window.location.href = '/login';
+    } else {
+      // 调用校验token接口
+      fetch(`//${API_PREFIX}/api/login/verify`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${token}`,
+        },
+        method: "POST",
+        body: JSON.stringify({ token }),
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          dispatch(setLoggedIn(true));
+        }).catch(() => {
+          dispatch(setLoggedIn(false));
+          navigate("/login");
+        });
     }
-  }, [DEV])
-  // Toggle the visibility of the Modal by updating the settingVisible state
-  const showModal = () => {
-    setSettingVisible(true);
-  };
-  const showCreateModal = () => {
-    setCreateVisible(true);
-  };
-  const closeModal = () => {
-    setSettingVisible(false);
-  };
-  const closeCreateModal = () => {
-    setCreateVisible(false);
-  };
-
-  // Add the Modal component with settingVisible as its visible prop
-  const settingsModal = (
-    <SettingModal
-      visible={settingVisible}
-      onCancel={closeModal}
-    >
-      {/* Add the content of the Modal here */}
-    </SettingModal>
-  );
-  const createModal = (
-    <CreateModal
-      visible={createVisible}
-      onCancel={closeCreateModal}
-    >
-      {/* Add the content of the Modal here */}
-    </CreateModal>
-  );
-  const emptyView = (
-    <Empty
-      image="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
-      imageStyle={{
-        height: 60,
-      }}
-      description={
-        <span>
-          现在创建教案吧！
-          {/* 修改 <a
-            style={{ color: '#4979e6' }}
-            onClick={showModal}
-          >
-            教案预设
-          </a> */}
-        </span>
-      }
-    >
-      <Button type="primary" size="large" onClick={showCreateModal}>创建教案！</Button>
-    </Empty>
-  )
-  const devTools = (
-    <div style={{ position: 'fixed', right: 20, top: 20, display: 'flex', alignItems: 'center' }}>
-      openAI请求&nbsp;&nbsp;
-      <Switch checkedChildren="开启" unCheckedChildren="关闭" checked={aiActive} onClick={(checked) => {
-        dispatch(setaiActive(checked))
-      }} />
+  }, []);
+  const renderLogo = collapsed ? (
+    <div className="logo-collapsed">
+      <div className="avatar"></div>
     </div>
-  )
-  const renderEditorApp = (EditorApp ? <EditorApp /> : <div>loading</div>)
+  ) : (
+    <div className="logo">
+      <div className="avatar"></div>
+      <div className="user-info">
+        <span className="name">游客</span>
+        <span className="email">cola.app</span>
+      </div>
+    </div>
+  );
+
   return (
-    <Layout style={{ height: "100%" }}>
-      {
-        DEV ? devTools
-          : null
-      }
-      <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div className="logo" >
-        </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          defaultSelectedKeys={[]}
-          items={[
-            {
-              key: "1",
-              icon: <FileTextOutlined />,
-              label: "教案1",
-            },
-            {
-              key: "2",
-              icon: <FileTextOutlined />,
-              label: "教案2",
-            },
-            {
-              key: "3",
-              icon: <FileTextOutlined />,
-              label: "教案3",
-            },
-          ]}
-        />
-        <Button onClick={showCreateModal} type="text" style={{ marginTop: 10, color: '#fff', textAlign: collapsed ? 'center' : 'left' }} block ghost>
-          <PlusOutlined />{collapsed ? '' : '新增教案'}
-        </Button>
-      </Sider>
-      <Layout className="site-layout" style={{ 
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-      }}>
-        <Header className="site-layout-background" style={{ padding: 0 }}>
-          {React.createElement(
-            collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
-            {
-              className: "trigger",
-              onClick: () => setCollapsed(!collapsed),
-            }
-          )}
-          {/* <Button type="text" onClick={showModal} icon={<SettingOutlined />}>
-            教案预设
-          </Button> */}
-          {/* <SettingOutlined className="floating-settings-button" onClick={showModal}/> */}
-        </Header>
-        <Content
-          className="site-layout-background "
-          id="appContainer"
-          style={{
-            margin: "24px 16px",
-            padding: 24,
-            flex: 1,
-            overflowY: 'auto',
-            // zIndex: 999
-            // minHeight: 280,
-          }}
-        >
-          {editId ? renderEditorApp : emptyView}
-          {/* <Suspense fallback={<div>Loading...</div>}>
-          </Suspense> */}
-          {/* <FormComponent /> */}
-        </Content>
-      </Layout>
-      {settingsModal}
-      {createModal}
-    </Layout>
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/*" element={
+           loggedIn ? (
+            <Layout style={{ height: "100%", display: "flex" }}>
+            <Sider
+              width={232}
+              style={{
+                background: "#111111",
+                width: "232px",
+                position: "relative",
+              }}
+              trigger={null}
+              collapsible
+              collapsed={collapsed}
+            >
+              {renderLogo}
+              <Menu
+                theme="dark"
+                style={{ background: "#111111" }}
+                mode="inline"
+                defaultSelectedKeys={["lessonPlanner"]}
+              >
+                <Menu.Item disabled key="overview" icon={<OverViewIcon />}>
+                  概览
+                  {/* <Link to="/overview">概览</Link> */}
+                </Menu.Item>
+                <Menu.Item key="lessonPlanner" icon={<LessonPlannerIcon />}>
+                  <Link to="/lessonPlanner">教案助手</Link>
+                </Menu.Item>
+              </Menu>
+              <div className="sider-bottom">
+                <Menu
+                  theme="dark"
+                  style={{ background: "#111111" }}
+                  mode="inline"
+                  defaultSelectedKeys={["lessonPlanner"]}
+                >
+                  <Menu.Item disabled key="setting" icon={<SettingIcon />}>
+                    设置
+                  </Menu.Item>
+                  <Menu.Item disabled key="logout" icon={<LogoutIcon />}>
+                    登出
+                  </Menu.Item>
+                </Menu>
+              </div>
+            </Sider>
+            <Layout
+              className="site-layout"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <Header
+                className="site-layout-background"
+                style={{
+                  padding: 0,
+                  height: 83,
+                  borderBottom: "1px solid #E1E1E1",
+                }}
+              >
+                {React.createElement(
+                  collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
+                  {
+                    className: "trigger",
+                    onClick: () => setCollapsed(!collapsed),
+                  }
+                )}
+              </Header>
+              <Content
+                className="site-layout-background "
+                id="appContainer"
+                style={{
+                  padding: "10px 24px",
+                  flex: 1,
+                }}
+              >
+                <Routes>
+                  <Route path="/" element={<LessonPlanner />} />
+                  <Route path="/lessonPlanner" element={<LessonPlanner />} />
+                </Routes>
+              </Content>
+            </Layout>
+            <div className="right-content">
+              <Routes>
+                <Route path="/" element={<LessonRight />} />
+                <Route path="/lessonPlanner" element={<LessonRight />} />
+              </Routes>
+            </div>
+          </Layout>
+         ) :  null}
+         />
+      </Routes>
+     
+    </>
   );
 };
 

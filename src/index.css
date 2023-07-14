@@ -13,7 +13,8 @@ body {
 }
 
 #root, html, body {
-  height: 100vh;
+  height: 100%;
+  font-size: 14px;
   /* height: 100vh; */
 }
 
@@ -38,44 +39,26 @@ body {
   color: #1890ff;
 }
 
-.logo {
-  height: 32px;
-  margin: 16px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
 .site-layout .site-layout-background {
   background: #fff;
 }
-/* header {
-  max-width: 580px;
-  margin: auto;
-  position: relative;
+
+#typeahead-menu {
+  z-index: 99;
+}
+
+.editor-share-bar {
+  margin-top: 4px;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-end;
+  .icon {
+    cursor: pointer;
+  }
 }
-
-header a {
-  max-width: 220px;
-  margin: 20px 0 0 0;
-  display: block;
-}
-
-header img {
-  display: block;
-  height: 100%;
-  width: 100%;
-}
-
-header h1 {
-  text-align: left;
-  color: #333;
-  display: inline-block;
-  margin: 20px 0 0 0;
-} */
 
 .editor-shell {
-  margin: 20px auto;
+  margin: 10px auto;
   border-radius: 2px;
   max-width: 1100px;
   color: #000;
@@ -122,6 +105,9 @@ header h1 {
   position: relative;
   resize: vertical;
   z-index: -1;
+  max-height: 600px;
+  overflow: auto;
+  border-bottom: 1px solid #eeeeee;
 }
 
 .test-recorder-output {
@@ -1382,7 +1368,7 @@ button.action-button:disabled {
   overflow: auto;
   height: 36px;
   position: sticky;
-  top: 0;
+  top: 14px;
   z-index: 2;
 }
 

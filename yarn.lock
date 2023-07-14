@@ -761,6 +761,11 @@
     redux-thunk "^2.4.2"
     reselect "^4.1.8"
 
+"@remix-run/router@1.7.1":
+  version "1.7.1"
+  resolved "https://registry.npmmirror.com/@remix-run/router/-/router-1.7.1.tgz"
+  integrity sha512-bgVQM4ZJ2u2CM8k1ey70o1ePFXsEzYVZoWghh6WjM8p59jQ7HxzbHW4SbnWFG7V9ig9chLawQxDTZ3xzOF8MkQ==
+
 "@rollup/plugin-babel@^6.0.3":
   version "6.0.3"
   resolved "https://registry.npmjs.org/@rollup/plugin-babel/-/plugin-babel-6.0.3.tgz"
@@ -3059,7 +3064,7 @@ rc-virtual-list@^3.4.13, rc-virtual-list@^3.4.8:
     rc-resize-observer "^1.0.0"
     rc-util "^5.15.0"
 
-react-dom@*, "react-dom@^16.8 || ^17.0 || ^18.0", "react-dom@^17.0.2 || ^18.2.0", react-dom@^18.2.0, react-dom@>=16.0.0, react-dom@>=16.11.0, react-dom@>=16.8.0, react-dom@>=16.9.0, react-dom@>=17.x:
+react-dom@*, "react-dom@^16.8 || ^17.0 || ^18.0", "react-dom@^17.0.2 || ^18.2.0", react-dom@^18.2.0, react-dom@>=16.0.0, react-dom@>=16.11.0, react-dom@>=16.8, react-dom@>=16.8.0, react-dom@>=16.9.0, react-dom@>=17.x:
   version "18.2.0"
   resolved "https://registry.npmjs.org/react-dom/-/react-dom-18.2.0.tgz"
   integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
@@ -3122,6 +3127,21 @@ react-refresh@^0.13.0:
   resolved "https://registry.npmjs.org/react-refresh/-/react-refresh-0.13.0.tgz"
   integrity sha512-XP8A9BT0CpRBD+NYLLeIhld/RqG9+gktUjW1FkE+Vm7OCinbG1SshcK5tb9ls4kzvjZr9mOQc7HYgBngEyPAXg==
 
+react-router-dom@^6.14.1:
+  version "6.14.1"
+  resolved "https://registry.npmmirror.com/react-router-dom/-/react-router-dom-6.14.1.tgz"
+  integrity sha512-ssF6M5UkQjHK70fgukCJyjlda0Dgono2QGwqGvuk7D+EDGHdacEN3Yke2LTMjkrpHuFwBfDFsEjGVXBDmL+bWw==
+  dependencies:
+    "@remix-run/router" "1.7.1"
+    react-router "6.14.1"
+
+react-router@6.14.1:
+  version "6.14.1"
+  resolved "https://registry.npmmirror.com/react-router/-/react-router-6.14.1.tgz"
+  integrity sha512-U4PfgvG55LdvbQjg5Y9QRWyVxIdO1LlpYT7x+tMAxd9/vmiPuJhIwdxZuIQLN/9e3O4KFDHYfR9gzGeYMasW8g==
+  dependencies:
+    "@remix-run/router" "1.7.1"
+
 react-sticky-box@^1.0.2:
   version "1.0.2"
   resolved "https://registry.npmmirror.com/react-sticky-box/-/react-sticky-box-1.0.2.tgz"
@@ -3129,7 +3149,7 @@ react-sticky-box@^1.0.2:
   dependencies:
     resize-observer-polyfill "^1.5.1"
 
-react@*, "react@^16.8 || ^17.0 || ^18.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0", "react@^16.9.0 || ^17.0.0 || ^18", "react@^17.0.2 || ^18.2.0", react@^18.2.0, react@>=16, react@>=16.0.0, react@>=16.11.0, react@>=16.13.1, react@>=16.8.0, "react@>=16.8.0 || >=17.0.0", react@>=16.9.0, react@>=17.x:
+react@*, "react@^16.8 || ^17.0 || ^18.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0", "react@^16.9.0 || ^17.0.0 || ^18", "react@^17.0.2 || ^18.2.0", react@^18.2.0, react@>=16, react@>=16.0.0, react@>=16.11.0, react@>=16.13.1, react@>=16.8, react@>=16.8.0, "react@>=16.8.0 || >=17.0.0", react@>=16.9.0, react@>=17.x:
   version "18.2.0"
   resolved "https://registry.npmjs.org/react/-/react-18.2.0.tgz"
   integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
