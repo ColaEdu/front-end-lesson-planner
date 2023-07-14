@@ -53,7 +53,8 @@ const App: React.FC = () => {
         .then((res) => res.json())
         .then((res) => {
           dispatch(setLoggedIn(true));
-        }).catch(() => {
+        })
+        .catch(() => {
           dispatch(setLoggedIn(false));
           navigate("/login");
         });
@@ -77,100 +78,111 @@ const App: React.FC = () => {
     <>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/*" element={
-           loggedIn ? (
-            <Layout style={{ height: "100%", display: "flex" }}>
-            <Sider
-              width={232}
-              style={{
-                background: "#111111",
-                width: "232px",
-                position: "relative",
-              }}
-              trigger={null}
-              collapsible
-              collapsed={collapsed}
-            >
-              {renderLogo}
-              <Menu
-                theme="dark"
-                style={{ background: "#111111" }}
-                mode="inline"
-                defaultSelectedKeys={["lessonPlanner"]}
-              >
-                <Menu.Item disabled key="overview" icon={<OverViewIcon />}>
-                  概览
-                  {/* <Link to="/overview">概览</Link> */}
-                </Menu.Item>
-                <Menu.Item key="lessonPlanner" icon={<LessonPlannerIcon />}>
-                  <Link to="/lessonPlanner">教案助手</Link>
-                </Menu.Item>
-              </Menu>
-              <div className="sider-bottom">
-                <Menu
-                  theme="dark"
-                  style={{ background: "#111111" }}
-                  mode="inline"
-                  defaultSelectedKeys={["lessonPlanner"]}
+        <Route
+          path="/*"
+          element={
+            loggedIn !== null ? (
+              loggedIn ? (
+                <Layout style={{ height: "100%", display: "flex" }}>
+                <Sider
+                  width={232}
+                  style={{
+                    background: "#111111",
+                    width: "232px",
+                    position: "relative",
+                  }}
+                  trigger={null}
+                  collapsible
+                  collapsed={collapsed}
                 >
-                  <Menu.Item disabled key="setting" icon={<SettingIcon />}>
-                    设置
-                  </Menu.Item>
-                  <Menu.Item disabled key="logout" icon={<LogoutIcon />}>
-                    登出
-                  </Menu.Item>
-                </Menu>
-              </div>
-            </Sider>
-            <Layout
-              className="site-layout"
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-              }}
-            >
-              <Header
-                className="site-layout-background"
-                style={{
-                  padding: 0,
-                  height: 83,
-                  borderBottom: "1px solid #E1E1E1",
-                }}
-              >
-                {React.createElement(
-                  collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
-                  {
-                    className: "trigger",
-                    onClick: () => setCollapsed(!collapsed),
-                  }
-                )}
-              </Header>
-              <Content
-                className="site-layout-background "
-                id="appContainer"
-                style={{
-                  padding: "10px 24px",
-                  flex: 1,
-                }}
-              >
-                <Routes>
-                  <Route path="/" element={<LessonPlanner />} />
-                  <Route path="/lessonPlanner" element={<LessonPlanner />} />
-                </Routes>
-              </Content>
-            </Layout>
-            <div className="right-content">
-              <Routes>
-                <Route path="/" element={<LessonRight />} />
-                <Route path="/lessonPlanner" element={<LessonRight />} />
-              </Routes>
-            </div>
-          </Layout>
-         ) :  null}
-         />
+                  {renderLogo}
+                  <Menu
+                    theme="dark"
+                    style={{ background: "#111111" }}
+                    mode="inline"
+                    defaultSelectedKeys={["lessonPlanner"]}
+                  >
+                    <Menu.Item disabled key="overview" icon={<OverViewIcon />}>
+                      概览
+                      {/* <Link to="/overview">概览</Link> */}
+                    </Menu.Item>
+                    <Menu.Item key="lessonPlanner" icon={<LessonPlannerIcon />}>
+                      <Link to="/lessonPlanner">教案助手</Link>
+                    </Menu.Item>
+                  </Menu>
+                  <div className="sider-bottom">
+                    <Menu
+                      theme="dark"
+                      style={{ background: "#111111" }}
+                      mode="inline"
+                      defaultSelectedKeys={["lessonPlanner"]}
+                    >
+                      <Menu.Item disabled key="setting" icon={<SettingIcon />}>
+                        设置
+                      </Menu.Item>
+                      <Menu.Item disabled key="logout" icon={<LogoutIcon />}>
+                        登出
+                      </Menu.Item>
+                    </Menu>
+                  </div>
+                </Sider>
+                <Layout
+                  className="site-layout"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Header
+                    className="site-layout-background"
+                    style={{
+                      padding: 0,
+                      height: 83,
+                      borderBottom: "1px solid #E1E1E1",
+                    }}
+                  >
+                    {React.createElement(
+                      collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
+                      {
+                        className: "trigger",
+                        onClick: () => setCollapsed(!collapsed),
+                      }
+                    )}
+                  </Header>
+                  <Content
+                    className="site-layout-background "
+                    id="appContainer"
+                    style={{
+                      padding: "10px 24px",
+                      flex: 1,
+                    }}
+                  >
+                    <Routes>
+                      <Route path="/" element={<LessonPlanner />} />
+                      <Route
+                        path="/lessonPlanner"
+                        element={<LessonPlanner />}
+                      />
+                    </Routes>
+                  </Content>
+                </Layout>
+                <div className="right-content">
+                  <Routes>
+                    <Route path="/" element={<LessonRight />} />
+                    <Route path="/lessonPlanner" element={<LessonRight />} />
+                  </Routes>
+                </div>
+              </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            ) : (
+              <div>Loading...</div>
+            )
+          }
+        />
       </Routes>
-     
     </>
   );
 };

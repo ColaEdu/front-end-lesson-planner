@@ -14,7 +14,7 @@ interface GlobalState {
   aiGenerating: boolean;
   askAIState: any;
   askAISelectionBefore: any;
-  loggedIn: boolean;
+  loggedIn: boolean | null;
 }
 const initialState: GlobalState = {
   text: `
@@ -81,7 +81,7 @@ Lastly, we're constantly adding cool new features to this playground. So make su
   askAISelectionBefore: null,
   // 开发环境AI开关
   aiActive: true,
-  loggedIn: false,
+  loggedIn: null,
 };
 /**
  * 调用openai异步action
