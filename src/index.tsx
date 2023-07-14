@@ -6,19 +6,20 @@
  *
  */
 
-import './setupEnv';
-import './index.css';
+import "./setupEnv";
+import "./index.css";
 
-import * as React from 'react';
-import { createRoot } from 'react-dom/client';
-import { Provider } from 'react-redux'
-import { ConfigProvider, App as AntdApp } from 'antd'
+import * as React from "react";
+import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
+import { ConfigProvider, App as AntdApp } from "antd";
 import store from "./store";
-import App from './App';
+import App from "./App";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 // Handle runtime errors
 const showErrorOverlay = (err: Event) => {
-  const ErrorOverlay = customElements.get('vite-error-overlay');
+  const ErrorOverlay = customElements.get("vite-error-overlay");
   if (!ErrorOverlay) {
     return;
   }
@@ -29,25 +30,27 @@ const showErrorOverlay = (err: Event) => {
   }
 };
 
-window.addEventListener('error', showErrorOverlay);
-window.addEventListener('unhandledrejection', ({ reason }) =>
-  showErrorOverlay(reason),
+window.addEventListener("error", showErrorOverlay);
+window.addEventListener("unhandledrejection", ({ reason }) =>
+  showErrorOverlay(reason)
 );
 
-createRoot(document.getElementById('root') as HTMLElement).render(
+createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: '#111111',
+          colorPrimary: "#111111",
         },
       }}
     >
-      <AntdApp style={{height: '100%'}}>
+      <AntdApp style={{ height: "100%" }}>
         <Provider store={store}>
-          <App />
+          <Router>
+            <App />
+          </Router>
         </Provider>
       </AntdApp>
     </ConfigProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

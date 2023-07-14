@@ -1,4 +1,4 @@
-import { HOST_PREFIX } from "../constants";
+import { API_PREFIX, HOST_PREFIX } from "../constants";
 
 export const getSummaryLessonText = async(params: any) => {
   const res = await fetch(`//${HOST_PREFIX}/similarText?teachingTheme=${params.teachingTheme}&textBookName=${params.textBookName}`, {
@@ -10,23 +10,20 @@ export const getSummaryLessonText = async(params: any) => {
   throw new Error('getSummaryLessonText error')
 }
 
-export const streamOpenAI = async (query: any, onChunkReturn) => {
+export const genLessonPlan = async (query: any, onChunkReturn) => {
   onChunkReturn('');
+  const token = localStorage.getItem('token');
   const headers = {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Authorization': `${token}`
   };
 
   const body = JSON.stringify({
-    textBookName: query.textBookName,
-    teachingTheme: query.teachingTheme,
-    messages: [
-      {
-        role: 'user',
-        content: `请按以下要求生成一篇标准化结构的教案：课本:${query.textBookName},课文标题:${query.title},课文内容:${query.content},`
-      }]
+    textbookId: query.textbook, // 使用的课本id
+    textId: query.lesson, // 课文标题 id
   });
 
-  const response = await fetch(`//${HOST_PREFIX}/lessonPlan`, {
+  const response = await fetch(`//${API_PREFIX}/api/lesson/plans/generate`, {
     method: 'POST',
     headers,
     body

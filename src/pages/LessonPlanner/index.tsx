@@ -1,7 +1,7 @@
 import { Button, Empty, Switch } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setaiActive } from "../../reducers/globalSlice";
+import { genAILessonPlan, setaiActive, seteditId } from "../../reducers/globalSlice";
 import { createSchemaField } from "@formily/react";
 import {
   Cascader,
@@ -15,7 +15,7 @@ import {
 import { createForm } from "@formily/core";
 import './index.less';
 
-export const schema = {
+export const schema =  {
   "type": "object",
   "properties": {
     "fekpflivc7c": {
@@ -114,7 +114,7 @@ export const schema = {
       "x-reactions": {
         "dependencies": [],
         "fulfill": {
-          "run": "$effect(() => {\n  $self.loading = true\n  fetch(\"//129.226.81.213:4010/api/lesson/textbooks\")\n    .then((response) => response.json())\n    .then(\n      ({ textbooks }) => {\n        $self.loading = false\n        $self.dataSource = textbooks.map(item => ({label: item.name, value: item._id}))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [])\n"
+          "run": "$effect(() => {\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(\"//129.226.81.213:4010/api/lesson/textbooks\", {\n     headers: {\n    Authorization: `${token}`,\n  },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ textbooks }) => {\n        $self.loading = false\n        $self.dataSource = textbooks.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [])\n"
         }
       },
       "x-decorator-props": {},
@@ -153,13 +153,13 @@ export const schema = {
           }
         ],
         "fulfill": {
-          "run": "$effect(() => {\n  if (!$deps.textbook) {\n    return;\n  }\n  $self.loading = true\n  fetch(`//129.226.81.213:4010/api/lesson/textbook/${$deps.textbook}/texts`)\n    .then((response) => response.json())\n    .then(\n      ({ texts }) => {\n        $self.loading = false\n        $self.dataSource = texts.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [$deps.textbook])\n"
+          "run": "$effect(() => {\n  if (!$deps.textbook) {\n    return\n  }\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(`//129.226.81.213:4010/api/lesson/textbook/${$deps.textbook}/texts`, {\n    headers: {\n      Authorization: `${token}`,\n    },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ texts }) => {\n        $self.loading = false\n        $self.dataSource = texts.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [$deps.textbook])\n"
         }
       }
     }
   },
-  "x-designable-id": "5ltoquzrusr"
-};
+  "x-designable-id": "4jrjp9qspib"
+}
 const SchemaField = createSchemaField({
   components: {
     FormItem,
@@ -207,6 +207,8 @@ const LessonPlanner: React.FC = () => {
       <Form form={form} layout="vertical" style={{width: 556}}>
         <SchemaField schema={schema}  />
         <Submit onSubmit={(values) => {
+          dispatch(seteditId('test'));
+          dispatch(genAILessonPlan(values))
           // TODO 调用生成教案接口
         }} size="large" style={{width: '100%'}}>创建教案</Submit>
       </Form>

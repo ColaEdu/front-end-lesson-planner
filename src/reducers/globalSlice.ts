@@ -1,6 +1,6 @@
 // Import the required libraries and methods
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { streamOpenAI, streamOpenAIProxy } from '../server/openai';
+import { genLessonPlan, streamOpenAIProxy } from '../server/openai';
 // Define the initial state of the global store
 interface GlobalState {
   text: string;
@@ -14,6 +14,7 @@ interface GlobalState {
   aiGenerating: boolean;
   askAIState: any;
   askAISelectionBefore: any;
+  loggedIn: boolean;
 }
 const initialState: GlobalState = {
   text: `
@@ -80,15 +81,16 @@ Lastly, we're constantly adding cool new features to this playground. So make su
   askAISelectionBefore: null,
   // 开发环境AI开关
   aiActive: true,
+  loggedIn: false,
 };
 /**
  * 调用openai异步action
  * @param query 
  * @returns 
  */
-export const callOpenAI = (query) => async (dispatch: any) => {
+export const genAILessonPlan = (query) => async (dispatch: any) => {
   dispatch(setAIAdviceGenerating(true))
-  await streamOpenAI(query, (text) => {
+  await genLessonPlan(query, (text) => {
     dispatch(settext(text))
   })
   dispatch(setAIAdviceGenerating(false))
@@ -152,6 +154,10 @@ const globalSlice = createSlice({
     // 清除选区
     clearSelection: (state, action: PayloadAction<any>) => {
       state.askAISelectionBefore = null;
+    },
+    // 设置登录状态
+    setLoggedIn: (state, action: PayloadAction<any>) => {
+      state.loggedIn = action.payload;
     }
   },
 });
@@ -160,7 +166,7 @@ const globalSlice = createSlice({
 export const { settext, seteditId, setAIloading, 
   setaiActive, setaskAI, setaskAISelection,
   setaskAIAdvicePrompt, setaskAIAdvice,
-  setAIAdviceWriting, setAIAdviceGenerating, saveSelection, clearSelection } = globalSlice.actions;
+  setAIAdviceWriting, setAIAdviceGenerating, saveSelection, clearSelection, setLoggedIn } = globalSlice.actions;
 
 // Export the globalSlice reducer
 export default globalSlice;
