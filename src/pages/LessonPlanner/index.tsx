@@ -14,6 +14,7 @@ import {
 } from "@formily/antd-v5";
 import { createForm } from "@formily/core";
 import './index.less';
+import { DEV } from "../../constants";
 
 export const schema =  {
   "type": "object",
@@ -114,7 +115,9 @@ export const schema =  {
       "x-reactions": {
         "dependencies": [],
         "fulfill": {
-          "run": "$effect(() => {\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(\"//129.226.81.213:4010/api/lesson/textbooks\", {\n     headers: {\n    Authorization: `${token}`,\n  },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ textbooks }) => {\n        $self.loading = false\n        $self.dataSource = textbooks.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [])\n"
+          "run": DEV ?
+          "$effect(() => {\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(\"//129.226.81.213:4010/api/lesson/textbooks\", {\n     headers: {\n    Authorization: `${token}`,\n  },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ textbooks }) => {\n        $self.loading = false\n        $self.dataSource = textbooks.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [])\n"
+          :"$effect(() => {\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(\"//api.cola.app/api/lesson/textbooks\", {\n     headers: {\n    Authorization: `${token}`,\n  },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ textbooks }) => {\n        $self.loading = false\n        $self.dataSource = textbooks.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [])\n"
         }
       },
       "x-decorator-props": {},
@@ -153,7 +156,9 @@ export const schema =  {
           }
         ],
         "fulfill": {
-          "run": "$effect(() => {\n  if (!$deps.textbook) {\n    return\n  }\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(`//129.226.81.213:4010/api/lesson/textbook/${$deps.textbook}/texts`, {\n    headers: {\n      Authorization: `${token}`,\n    },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ texts }) => {\n        $self.loading = false\n        $self.dataSource = texts.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [$deps.textbook])\n"
+          "run": DEV ?
+           "$effect(() => {\n  if (!$deps.textbook) {\n    return\n  }\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(`//129.226.81.213:4010/api/lesson/textbook/${$deps.textbook}/texts`, {\n    headers: {\n      Authorization: `${token}`,\n    },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ texts }) => {\n        $self.loading = false\n        $self.dataSource = texts.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [$deps.textbook])\n"
+           : "$effect(() => {\n  if (!$deps.textbook) {\n    return\n  }\n  $self.loading = true\n  const token = localStorage.getItem('token');\n  fetch(`//api.cola.app/api/lesson/textbook/${$deps.textbook}/texts`, {\n    headers: {\n      Authorization: `${token}`,\n    },\n  })\n    .then((response) => response.json())\n    .then(\n      ({ texts }) => {\n        $self.loading = false\n        $self.dataSource = texts.map((item) => ({\n          label: item.name,\n          value: item._id,\n        }))\n      },\n      () => {\n        $self.loading = false\n      }\n    )\n}, [$deps.textbook])\n"
         }
       }
     }
