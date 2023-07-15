@@ -655,7 +655,7 @@ export default function ToolbarPlugin(): JSX.Element {
   const handleDownLoadPDF = () => {
     editor.getEditorState().read(async() => {
       const markdown = $convertToMarkdownString(PLAYGROUND_TRANSFORMERS);
-      const response = await fetch(`//${API_PREFIX}/api/lessonpdf`, {
+      const response = await fetch(`//${API_PREFIX}/api/lesson/plans/pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -667,7 +667,7 @@ export default function ToolbarPlugin(): JSX.Element {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = '文件.pdf';
+        link.download = '教案.pdf';
         link.click();
         URL.revokeObjectURL(url);
       } else {
