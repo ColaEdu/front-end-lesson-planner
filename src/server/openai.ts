@@ -38,8 +38,16 @@ export const genLessonPlan = async (query: any, onChunkReturn) => {
       break;
     }
     chunks += new TextDecoder('utf-8').decode(value);
+    const hasEndTag = /\[END\]/.test(chunks);
+    let filteredChunk = chunks;
+    if (hasEndTag) {
+      filteredChunk = chunks.replace(/\[END\]/g, "");
+    }
     texts += chunks;
     onChunkReturn(texts)
+    if (hasEndTag) {
+      break;
+    }
     try {
       // const result = JSON.parse(chunks);
       // console.log(result);
